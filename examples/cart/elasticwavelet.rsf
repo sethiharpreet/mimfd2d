@@ -1,0 +1,44 @@
+2.1-git	sfspike	C/examples/cart:	hsethi_a@GP-MOBILE13	Mon Aug 26 15:19:08 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	unit1="s"
+	d1=0.0005
+	n1=2000
+	in="stdin"
+
+2.1-git	sfricker1	C/examples/cart:	hsethi_a@GP-MOBILE13	Mon Aug 26 15:19:08 2019
+
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/C/examples/cart/wav.rsf@"
+2.1-git	sfput	C/examples/cart:	hsethi_a@GP-MOBILE13	Mon Aug 26 15:19:09 2019
+
+	data_format="native_float"
+	n2=1
+	in="stdout"
+	n3=1
+	in="stdin"
+
+2.1-git	sftransp	C/examples/cart:	hsethi_a@GP-MOBILE13	Mon Aug 26 15:19:09 2019
+
+	d3=0.0005
+	n3=2000
+	data_format="native_float"
+	o3=0
+	label3="Time"
+	esize=4
+	in="stdout"
+	unit3="s"
+	n1=1
+	in="stdin"
+
+2.1-git	sfpad	C/examples/cart:	hsethi_a@GP-MOBILE13	Mon Aug 26 15:19:09 2019
+
+	n2=2
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/C/examples/cart/elasticwavelet.rsf@"

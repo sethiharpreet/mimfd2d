@@ -1,0 +1,59 @@
+2.1-git	sfspike	C/examples/cart:	hsethi_a@GP-MOBILE13	Sat Aug 31 23:14:33 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	unit1="s"
+	d1=0.0005
+	n1=4000
+	in="stdin"
+
+2.1-git	sfpad	C/examples/cart:	hsethi_a@GP-MOBILE13	Sat Aug 31 23:14:33 2019
+
+	end1=4000
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	n1=8000
+	in="stdin"
+
+2.1-git	sfricker1	C/examples/cart:	hsethi_a@GP-MOBILE13	Sat Aug 31 23:14:33 2019
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sfwindow	C/examples/cart:	hsethi_a@GP-MOBILE13	Sat Aug 31 23:14:33 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	unit1="s"
+	d1=0.0005
+	n1=4000
+	in="stdin"
+
+2.1-git	sfscale	C/examples/cart:	hsethi_a@GP-MOBILE13	Sat Aug 31 23:14:33 2019
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sfput	C/examples/cart:	hsethi_a@GP-MOBILE13	Sat Aug 31 23:14:33 2019
+
+	data_format="native_float"
+	in="/var/tmp/C/examples/cart/wav_.rsf@"
+	label1=t
+2.1-git	sfmath	C/examples/cart:	hsethi_a@GP-MOBILE13	Sat Aug 31 23:14:36 2019
+
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/C/examples/cart/souxz.rsf@"
+	x1=1
