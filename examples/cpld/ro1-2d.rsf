@@ -1,0 +1,33 @@
+2.1-git	sfspike	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	d2=0.02
+	o1=240
+	n2=320
+	o2=0
+	label1="Time"
+	data_format="native_float"
+	label2="Distance"
+	esize=4
+	in="stdout"
+	unit1="s"
+	unit2="km"
+	d1=0.02
+	n1=300
+	in="stdin"
+
+2.1-git	sfput	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	in="/var/tmp/C/examples/cpld/zero1-2d.rsf@"
+	label1=z
+	data_format="native_float"
+	unit1=km
+	label2=x
+	unit2=km
+2.1-git	sfmath	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	x2=2
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/C/examples/cpld/ro1-2d.rsf@"
+	x1=1

@@ -1,0 +1,41 @@
+2.1-git	sfspike	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:40:51 2019
+
+	d2=0.01
+	o1=0
+	n2=320
+	o2=0
+	label1="Time"
+	data_format="native_float"
+	label2="Distance"
+	esize=4
+	in="stdout"
+	unit1="s"
+	unit2="km"
+	d1=0.01
+	n1=320
+	in="stdin"
+
+2.1-git	sfput	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:40:51 2019
+
+	in="/var/tmp/cart/elastic_aniso/tti/zero-2d.rsf@"
+	label1=z
+	data_format="native_float"
+	unit1=km
+	label2=x
+	unit2=km
+2.1-git	sfmath	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 17:27:02 2019
+
+	x2=2
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/cart/elastic_aniso/tti/nu-2d.rsf@"
+	x1=1
+2.1-git	sfmath	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 17:27:02 2019
+
+	x2=2
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/cart/elastic_aniso/tti/nu-2d-rad.rsf@"
+	x1=1

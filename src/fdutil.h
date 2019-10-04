@@ -126,6 +126,17 @@ fdm2d fdutil_init(bool verb_,
 		  int ompchunk_);
 /*< init fdm utilities >*/
 
+/*------------------------------------------------------------*/
+fdm2d fdutil_init_cpld(bool verb_,
+		  bool free_,
+      bool top_,
+		  sf_axis az_,
+		  sf_axis ax_,
+		  int     nb_,
+		  int ompchunk_);
+/*< init fdm utilities >*/
+
+
 
 /*------------------------------------------------------------*/
 fdm3d fdutil3d_init(bool verb_,

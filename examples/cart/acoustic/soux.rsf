@@ -1,0 +1,59 @@
+2.1-git	sfspike	examples/cart/acoustic:	hsethi_a@GP-MOBILE13	Wed Oct  2 14:20:42 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	unit1="s"
+	d1=0.0005
+	n1=2000
+	in="stdin"
+
+2.1-git	sfpad	examples/cart/acoustic:	hsethi_a@GP-MOBILE13	Wed Oct  2 14:20:42 2019
+
+	end1=2000
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	n1=4000
+	in="stdin"
+
+2.1-git	sfricker1	examples/cart/acoustic:	hsethi_a@GP-MOBILE13	Wed Oct  2 14:20:42 2019
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sfwindow	examples/cart/acoustic:	hsethi_a@GP-MOBILE13	Wed Oct  2 14:20:42 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	unit1="s"
+	d1=0.0005
+	n1=2000
+	in="stdin"
+
+2.1-git	sfscale	examples/cart/acoustic:	hsethi_a@GP-MOBILE13	Wed Oct  2 14:20:42 2019
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sfput	examples/cart/acoustic:	hsethi_a@GP-MOBILE13	Wed Oct  2 14:20:42 2019
+
+	data_format="native_float"
+	in="/var/tmp/examples/cart/acoustic/wav_.rsf@"
+	label1=t
+2.1-git	sfmath	examples/cart/acoustic:	hsethi_a@GP-MOBILE13	Wed Oct  2 14:20:42 2019
+
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/examples/cart/acoustic/soux.rsf@"
+	x1=1

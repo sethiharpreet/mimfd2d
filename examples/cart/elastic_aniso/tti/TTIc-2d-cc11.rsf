@@ -1,0 +1,77 @@
+2.1-git	sfspike	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:40:51 2019
+
+	d2=0.01
+	o1=0
+	n2=320
+	o2=0
+	label1="Time"
+	data_format="native_float"
+	label2="Distance"
+	esize=4
+	in="stdout"
+	unit1="s"
+	unit2="km"
+	d1=0.01
+	n1=320
+	in="stdin"
+
+2.1-git	sfput	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:40:51 2019
+
+	in="/var/tmp/cart/elastic_aniso/tti/zero-2d.rsf@"
+	label1=z
+	data_format="native_float"
+	unit1=km
+	label2=x
+	unit2=km
+2.1-git	sfmath	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:40:51 2019
+
+	x2=2
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/cart/elastic_aniso/tti/vp-2d.rsf@"
+	x1=1
+2.1-git	sfmath	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:40:51 2019
+
+	x2=4
+	vp=1
+	input=0
+	data_format="native_float"
+	esize=4
+	ro=2
+	in="/var/tmp/cart/elastic_aniso/tti/TTIc-2d-cc-33.rsf@"
+	x1=3
+2.1-git	sfmath	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 17:20:03 2019
+
+	x2=3
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/cart/elastic_aniso/tti/TTIc-2d-cc-11.rsf@"
+	eps2=1
+	x1=2
+2.1-git	sfcat	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 17:20:03 2019
+
+	n3=4
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/cart/elastic_aniso/tti/TTIc-2d-cc.rsf@"
+2.1-git	sfwindow	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 17:20:03 2019
+
+	d2=0.01
+	n2=320
+	o1=0
+	d3=1
+	o2=0
+	label1="z"
+	n3=1
+	data_format="native_float"
+	o3=0
+	label2="x"
+	f3=0
+	esize=4
+	in="/var/tmp/cart/elastic_aniso/tti/TTIc-2d-cc11.rsf@"
+	unit1="km"
+	unit2="km"
+	d1=0.01
+	n1=320

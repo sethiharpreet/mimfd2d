@@ -1,0 +1,153 @@
+from rsf.proj import *
+
+import sys
+import os
+
+proj = Project()
+env = Environment()
+
+RSFPATH=proj.get('RSFROOT')
+src = '/Users/hsethi_a/Dropbox/CSM_HARPREET/mimetic_operators/C/src/'
+bp  = '/Users/hsethi_a/Dropbox/CSM_HARPREET/mimetic_operators/C/bin/'
+fname = 'sfewemfd2d.x'
+sys.path.insert(0, RSFPATH+'/book/Recipes')
+
+# . . Import modules
+import math,fdmod,stiffness
+
+# . . Flags and Libs
+cflags = "-O3 -DNO_BLAS -std=gnu99"
+lib=['rsf','m']
+
+
+# . . Compilation
+build=proj.Program(fname,
+              [src+'Mewe_mfd2d_cart.c',src+'mfd2d_utils.c',src+'fdutil.c'],
+              CFLAGS=cflags,LIBS=lib,LIBPATH=[RSFPATH+'/lib','.'])
+
+env.Install(bp,build)
+env.Alias('install',bp)
+
+par = {
+    # Model Dimensions
+    'nx':320, 'ox':0, 'dx':0.02,  'lx':'x', 'ux':'km',
+    'ny':1,   'oy':0, 'dy':0.02,  'ly':'y', 'uy':'km',
+    'nz':320, 'oz':0, 'dz':0.02,  'lz':'z', 'uz':'km',
+
+    # Time parameters
+    'nt':3000,'ot':0, 'dt':0.0005,  'lt':'t', 'ut':'s',
+
+    'kt':240,'frq':10,
+    # Shot locations
+    'nsx':1,  'dsx':0.0050, 'osx':0,
+    'nsy':1,  'dsy':0.0050, 'osy':0,
+
+    # EWEFD2D parameters
+    'snap':'y','jsnap':10,'height':6,
+    'nb':60,'nbell':5,'jdata':100,'dabc':'n',
+    'free':'y','ssou':'y', 'nc':2, 'gpu':1,
+    }
+
+# . . Initialize parameters in fdm module
+fdmod.param(par)
+par['nframe']=20
+par['iframe']=20
+
+# Layer 1
+par['vp']=3.0
+par['vs']=1.5
+par['ro']=1.0
+par['eps']=0.1
+par['del']=0.1
+
+# . . Set up a wavelet
+# Flow('wav',None,'spike n1=%(nt)d d1=%(dt)g o1=0 k1=%(kt)d | ricker1 frequency=%(frq)d ' %par )
+# Flow('elasticwavelet','wav','put n2=1 n3=1 | transp plane=13 | pad n2=2')
+
+fdmod.wavelet('wav_',par['frq'],par)
+
+# --------------------------------------------------------------------
+# . . Source Section
+Flow('souz','wav_','math output=input*1')
+Flow('souxz','wav_','math output=input*0')
+Flow('soux','wav_','math output=input*0')
+
+
+
+# . . Make 2D elastic source
+Flow('wave-2d',['souz','souxz','soux'],
+     '''
+     cat axis=2 space=n ${SOURCES[1:3]} |
+     transp plane=12 |
+     transp plane=23 |
+     transp plane=12
+     ''')
+
+Result('wav_','window n1=1000 |' + fdmod.waveplot('',par))
+# --------------------------------------------------------------------
+# . . Coordinate Section
+# . . Locate source position
+
+xsou=par['ox']+(par['nx']-1)*par['dx']/2.
+zsou=par['oz']+(par['nz']-1)*par['dz']/2.
+
+# . . 2D Sources
+fdmod.point('ss-2d',xsou,zsou,par) # . . 2D Point Sources
+fdmod.horizontal('rr-2d',0,par)    # . . 2D receivers
+
+# --------------------------------------------------------------------
+# . .  2D model section
+
+# . . Create zero array size of 2D model
+
+# Layer
+
+Flow('zero-2d',None,
+     '''
+     spike nsp=1 mag=0.0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     put label1=%(lz)s label2=%(lx)s unit1=%(uz)s unit2=%(ux)s
+     ''' % par)
+
+
+
+# Layer Anisotropic Vp, Vs, rho, eps, del models
+
+Flow('vp-2d','zero-2d','math output="%(vp)g"' %par)
+Flow('vs-2d','zero-2d','math output="%(vs)g"' %par)
+Flow('ro-2d','zero-2d','math output="%(ro)g"' %par)
+Flow('eps-2d','zero-2d','math output="%(eps)g"' %par)
+Flow('del-2d','zero-2d','math output="%(del)g"' %par)
+
+# . . Create stiffness models
+
+
+# Layer
+stiffness.vti2d('VTIc-2d','vp-2d','vs-2d','ro-2d','eps-2d','del-2d',par)
+
+
+# ------------------------------------------------------------
+# . . Tensorial Elastic Modeling Section
+
+exe=bp+fname
+
+Flow(['ECART_d-2d','ECART_w-2d'],['wave-2d','VTIc-2d','ro-2d','ss-2d','rr-2d'],
+        exe +
+        '''
+        jdata=%(jdata)d dabc=%(dabc)s free=%(free)s
+        verb=y snap=%(snap)s jsnap=%(jsnap)d ssou=%(ssou)s
+        nb=%(nb)d nbell=%(nbell)d
+        ccc=${SOURCES[1]}
+        den=${SOURCES[2]}
+        sou=${SOURCES[3]}
+        rec=${SOURCES[4]}
+        wfl=${TARGETS[1]}
+        ''' % par)
+
+Flow('ECART_wu-2d','ECART_w-2d','window n3=1 f3=0' %par)
+Result('ECART_wu-2d',fdmod.cgrey('pclip=99.0 gainpanel=a min1=0',par) %par)
+
+
+
+End()

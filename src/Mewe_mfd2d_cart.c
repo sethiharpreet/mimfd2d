@@ -157,6 +157,7 @@ int main(int argc, char* argv[]){
   nzpad=fdm->nzpad;
   nxpad=fdm->nxpad;
 
+
   /*------------------------------------------------------------*/
 
   /* setup output wavefield header */
@@ -243,6 +244,7 @@ int main(int argc, char* argv[]){
 
   free(*tt); free(tt);
 
+
   /* Absorbing boundary conditions */
   /*------------------------------------------------------------*/
 //   if(dabc) {
@@ -310,7 +312,7 @@ int main(int argc, char* argv[]){
                      c33, c55, t21, dtx, dtz, nzpad, nxpad);
 
     // if(ssou) inject_ps_src_cart(szz_fv, szz_vf, ww, cs, it);
-    inject_vel_src_cart(vz_ff, vx_vv, ww, cs, it);
+    inject_vel_src_cart(vz_ff, vz_vv, ww, cs, it);
 
 
     update_velocity_ff(vx_ff, vz_ff, sxx_fv, sxz_fv, sxz_vf, szz_vf, ro, \

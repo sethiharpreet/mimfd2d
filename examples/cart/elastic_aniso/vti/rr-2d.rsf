@@ -1,0 +1,43 @@
+2.1-git	sfmath	cart/elastic_aniso/vti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:35:39 2019
+
+	o1=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp//rr-2do_3209302573108329@"
+	x1=0
+	d1=0.02
+	n1=320
+2.1-git	sfmath	cart/elastic_aniso/vti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:35:39 2019
+
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp//rr-2dx_6674955985593130@"
+	x1=1
+2.1-git	sfcat	cart/elastic_aniso/vti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:35:39 2019
+
+	n2=2
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sftransp	cart/elastic_aniso/vti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:35:39 2019
+
+	d2=0.02
+	n2=320
+	o2=0
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	n1=2
+	in="stdin"
+
+2.1-git	sfput	cart/elastic_aniso/vti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:35:39 2019
+
+	in="/var/tmp/cart/elastic_aniso/vti/rr-2d.rsf@"
+	label1=
+	data_format="native_float"
+	label2=
+	unit1=
+	unit2=

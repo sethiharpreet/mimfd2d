@@ -1,0 +1,59 @@
+2.1-git	sfspike	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	unit1="s"
+	d1=0.0005
+	n1=2000
+	in="stdin"
+
+2.1-git	sfpad	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	end1=2000
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	n1=4000
+	in="stdin"
+
+2.1-git	sfricker1	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sfwindow	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	unit1="s"
+	d1=0.0005
+	n1=2000
+	in="stdin"
+
+2.1-git	sfscale	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sfput	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	data_format="native_float"
+	in="/var/tmp/C/examples/cpld/wav_.rsf@"
+	label1=t
+2.1-git	sfmath	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/C/examples/cpld/souxz.rsf@"
+	x1=1

@@ -164,6 +164,44 @@ fdm2d fdutil_init(bool verb_,
     return fdm;
 }
 
+fdm2d fdutil_init_cpld(bool verb_,
+		  bool free_,
+      bool top_,
+		  sf_axis az_,
+		  sf_axis ax_,
+		  int     nb_,
+		  int ompchunk_)
+/*< init fdm utilities >*/
+{
+    fdm2d fdm;
+    fdm = (fdm2d) sf_alloc(1,sizeof(*fdm));
+
+    fdm->free=free_;
+    fdm->verb=verb_;
+
+    fdm->nb=nb_;
+
+    fdm->nz=sf_n(az_);
+    fdm->nx=sf_n(ax_);
+
+    fdm->dz=sf_d(az_);
+    fdm->dx=sf_d(ax_);
+
+    fdm->oz=sf_o(az_);
+    fdm->ox=sf_o(ax_);
+
+    fdm->nzpad= (free_ && top_) ? sf_n(az_) : sf_n(az_)+fdm->nb ;
+
+    fdm->nxpad= sf_n(ax_)+2*fdm->nb;
+
+    fdm->ozpad= sf_o(az_);
+    fdm->oxpad= sf_o(ax_)-fdm->nb*fdm->dx;
+
+    fdm->ompchunk=ompchunk_;
+
+    return fdm;
+}
+
 
 /*------------------------------------------------------------*/
 fdm3d fdutil3d_init(bool verb_,

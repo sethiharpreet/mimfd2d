@@ -1,0 +1,59 @@
+2.1-git	sfspike	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:45:32 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	unit1="s"
+	d1=0.0005
+	n1=3000
+	in="stdin"
+
+2.1-git	sfpad	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:45:32 2019
+
+	end1=3000
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	n1=6000
+	in="stdin"
+
+2.1-git	sfricker1	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:45:32 2019
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sfwindow	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:45:32 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	unit1="s"
+	d1=0.0005
+	n1=3000
+	in="stdin"
+
+2.1-git	sfscale	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:45:32 2019
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sfput	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:45:32 2019
+
+	data_format="native_float"
+	in="/var/tmp/cart/elastic_aniso/tti/wav_.rsf@"
+	label1=t
+2.1-git	sfmath	cart/elastic_aniso/tti:	hsethi_a@GP-MOBILE13	Thu Oct  3 12:45:36 2019
+
+	input=0
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/cart/elastic_aniso/tti/soux.rsf@"
+	x1=1

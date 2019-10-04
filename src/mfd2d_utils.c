@@ -37,7 +37,7 @@ void expand2d(float** in, float** out, fdm2d fdm)
 void expand2d_bottom(float **in, float **out, fdm2d fdm)
 /*< expand domain with free surface at top >*/
 {
-    int iz,ix;
+    int iz,ix,ixp;
 
     for(ix=0; ix<fdm->nx; ix++){
 	     for(iz=0; iz<fdm->nz; iz++){
@@ -45,24 +45,25 @@ void expand2d_bottom(float **in, float **out, fdm2d fdm)
 	       }
        }
 
-    for(ix=0; ix<fdm->nxpad; ix++){
-      for(iz=0; iz<fdm->nb;  iz++){
-          out[ix][fdm->nzpad-iz-1] = out[ix][fdm->nzpad-fdm->nb-1];
-	       }
+       for (ix=0; ix<fdm->nxpad+2; ix++) {
+   		    for (iz=0; iz<fdm->nb+2; iz++) {
+   	    	    out[ix][fdm->nzpad-iz+1] = out[ix][fdm->nzpad-fdm->nb-1];
+   		        }
        }
 
-    for(ix=0; ix<fdm->nb; ix++){
-      for(iz=0; iz<fdm->nzpad; iz++){
-	       out[ix][iz]         = out[fdm->nb][iz];
-	       out[fdm->nxpad-ix-1][iz] = out[fdm->nxpad-fdm->nb-1][iz];
-	      }
-      }
+       for (ix=0; ix<fdm->nb+2; ix++) {
+   		    for (iz=0; iz<fdm->nzpad+2; iz++) {
+               ixp = (ix<fdm->nb) ? ix : fdm->nb-1;
+   		        out[ixp][iz] = out[fdm->nb][iz];
+   	    	    out[fdm->nxpad-ix+1][iz] = out[fdm->nxpad-fdm->nb-1][iz];
+   		       }
+       }
 }
 
 void expand2d_top(float **in, float **out, fdm2d fdm )
 /*< expand domain with free surface at top >*/
 {
-    int iz,ix;
+    int iz,ix,ixp;
 
     for(ix=0; ix<fdm->nx; ix++){
 	     for(iz=0; iz<fdm->nz; iz++){
@@ -70,20 +71,20 @@ void expand2d_top(float **in, float **out, fdm2d fdm )
 	       }
        }
 
-
-    for(ix=0; ix<fdm->nxpad; ix++){
-      for(iz=0; iz<fdm->nb;  iz++){
-          out[ix][iz] = out[ix][fdm->nb];
-	       }
+    for (ix=0; ix<fdm->nxpad+2; ix++) {
+   	    out[ix][fdm->nzpad+1] = out[ix][fdm->nzpad-1];
+        out[ix][fdm->nzpad]   = out[ix][fdm->nzpad-1];
        }
 
-    for(ix=0; ix<fdm->nb; ix++){
-      for(iz=0; iz<fdm->nz; iz++){
-	       out[ix][iz]         = out[fdm->nb][iz];
-	       out[fdm->nxpad-ix-1][iz] = out[fdm->nxpad-fdm->nb-1][iz];
-	      }
-      }
-}
+    for (ix=0; ix<fdm->nb+2;    ix++) {
+   		 for (iz=0; iz<fdm->nzpad+2; iz++) {
+          ixp = (ix<fdm->nb) ? ix : fdm->nb-1;
+   		    out[ixp][iz] = out[fdm->nb][iz];
+   	    	out[fdm->nxpad-ix+1][iz] = out[fdm->nxpad-fdm->nb-1][iz];
+   		   }
+       }
+
+ }
 
 void window2d(float **in, float **out, fdm2d fdm)
 /*< extract domain asssuming free surface at top >*/
@@ -120,7 +121,6 @@ void sponge_ex(float **u, int nxpad, int nzpad, int nb)
 			}
     }
 }
-
 
 
 /*-------------------- Mimetic Operations -----------------------------*/
@@ -294,7 +294,7 @@ void G2_CC(float **g2,float **gg, int nz, int nx)
 
 /* Pressure Update */
 
-void update_pressure_fv(float **p_fv, float **vx_ff, float **vz_vv, float **t21, float **rho, float **vel, float dtx, float dtz, int nzpad, int nxpad)
+void update_pressure_fv(float **p_fv, float **vx_ff, float **vz_vv, float **t21, float **ro, float **vp, float dtx, float dtz, int nzpad, int nxpad)
 /* vx[f,f] -------> p[f,v]   */
 /* vz[v,v] -------> p[f,v]   */
 {
@@ -302,11 +302,11 @@ void update_pressure_fv(float **p_fv, float **vx_ff, float **vz_vv, float **t21,
 
   memset(t21[0],0,(nzpad+2)*(nxpad+1)*sizeof(float));
 
-  D1_CC(t21,vz_vv,nzpad+2,nxpad+1);
+  D1_CC(t21,vz_vv,nzpad+1,nxpad+1);
 
   for (ix=0; ix<nxpad+1; ix++){
     for(iz=0; iz<nzpad+2; iz++){
-      p_fv[ix][iz]-= dtz*rho[ix][iz]*vel[ix][iz]*vel[ix][iz]*t21[ix][iz];
+      p_fv[ix][iz]-= dtz*ro[ix][iz]*vp[ix][iz]*vp[ix][iz]*t21[ix][iz];
     }
   }
 
@@ -316,14 +316,14 @@ void update_pressure_fv(float **p_fv, float **vx_ff, float **vz_vv, float **t21,
 
   for (ix=0; ix<nxpad+1; ix++){
     for(iz=0; iz<nzpad+2; iz++){
-      p_fv[ix][iz]-= dtx*rho[ix][iz]*vel[ix][iz]*vel[ix][iz]*t21[ix][iz];
+      p_fv[ix][iz]-= dtx*ro[ix][iz]*vp[ix][iz]*vp[ix][iz]*t21[ix][iz];
     }
   }
 
 }
 
 
-void update_pressure_vf(float **p_vf, float **vz_ff, float **vx_vv, float **t12, float **rho, float **vel, float dtx, float dtz, int nzpad, int nxpad)
+void update_pressure_vf(float **p_vf, float **vz_ff, float **vx_vv, float **t12, float **ro, float **vp, float dtx, float dtz, int nzpad, int nxpad)
 /* vx[f,f] -------> p[f,v]   */
 /* vz[v,v] -------> p[f,v]   */
 {
@@ -335,26 +335,25 @@ void update_pressure_vf(float **p_vf, float **vz_ff, float **vx_vv, float **t12,
 
   for (ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+1; iz++){
-      p_vf[ix][iz]-= dtz*rho[ix][iz]*vel[ix][iz]*vel[ix][iz]*t12[ix][iz];
+      p_vf[ix][iz]-= dtz*ro[ix][iz]*vp[ix][iz]*vp[ix][iz]*t12[ix][iz];
     }
   }
 
   memset(t12[0],0,(nzpad+1)*(nxpad+2)*sizeof(float));
 
-  D2_CC(t12,vx_vv,nzpad+2,nxpad+1);
+  D2_CC(t12,vx_vv,nzpad+1,nxpad+1);
 
   for (ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+1; iz++){
-      p_vf[ix][iz]-= dtx*rho[ix][iz]*vel[ix][iz]*vel[ix][iz]*t12[ix][iz];
+      p_vf[ix][iz]-= dtx*ro[ix][iz]*vp[ix][iz]*vp[ix][iz]*t12[ix][iz];
     }
   }
 
 }
 
+/* Acoustic velocity Update */
 
-/* Velocity Update */
-
-void update_ac_velocity_ff(float **vz_ff, float **vx_ff, float ** p_vf, float **p_fv, float **t22, float **rho, float dtx, float dtz, int nzpad, int nxpad)
+void update_ac_velocity_ff(float **vz_ff, float **vx_ff, float ** p_vf, float **p_fv, float **t22, float **ro, float dtx, float dtz, int nzpad, int nxpad)
 /* p[f,v] -------> vx[f,f]   */
 /* p[v,f] -------> vz[f,f]   */
 {
@@ -363,27 +362,29 @@ void update_ac_velocity_ff(float **vz_ff, float **vx_ff, float ** p_vf, float **
 
   memset(t22[0],0,(nzpad+2)*(nxpad+2)*sizeof(float));
 
-  D1_CC(t22,p_vf,nzpad+2,nxpad+2);
+  D1_CC(t22,p_vf,nzpad+1,nxpad+2);
 
   for (ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+2; iz++){
-      vz_ff[ix][iz]-= dtz*t22[ix][iz]/rho[ix][iz];
+      vz_ff[ix][iz]-= dtz*t22[ix][iz]/ro[ix][iz];
     }
   }
 
   memset(t22[0],0,(nzpad+2)*(nxpad+2)*sizeof(float));
 
-  D2_CC(t22,p_fv,nzpad+2,nxpad+2);
+  D2_CC(t22,p_fv,nzpad+2,nxpad+1);
 
   for (ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+2; iz++){
-      vx_ff[ix][iz]-= dtx*t22[ix][iz]/rho[ix][iz];
+      vx_ff[ix][iz]-= dtx*t22[ix][iz]/ro[ix][iz];
     }
   }
 
 }
 
-void update_ac_velocity_vv(float **vz_vv, float **vx_vv, float **p_vf, float **p_fv, float **t11, float **rho, float dtx, float dtz, int nzpad, int nxpad)
+
+
+void update_ac_velocity_vv(float **vz_vv, float **vx_vv, float **p_vf, float **p_fv, float **t11, float **ro, float dtx, float dtz, int nzpad, int nxpad)
 /* p[f,v] -------> vz[v,v]   */
 /* p[v,f] -------> vx[v,v]   */
 {
@@ -396,7 +397,7 @@ void update_ac_velocity_vv(float **vz_vv, float **vx_vv, float **p_vf, float **p
 
   for (ix=0; ix<nxpad+1; ix++){
     for(iz=0; iz<nzpad+1; iz++){
-      vz_vv[ix][iz]-= dtz*t11[ix][iz]/rho[ix][iz];
+      vz_vv[ix][iz]-= dtz*t11[ix][iz]/ro[ix][iz];
     }
   }
 
@@ -406,7 +407,7 @@ void update_ac_velocity_vv(float **vz_vv, float **vx_vv, float **p_vf, float **p
 
   for (ix=0; ix<nxpad+1; ix++){
     for(iz=0; iz<nzpad+1; iz++){
-      vx_vv[ix][iz]-= dtx*t11[ix][iz]/rho[ix][iz];
+      vx_vv[ix][iz]-= dtx*t11[ix][iz]/ro[ix][iz];
     }
   }
 }
@@ -416,6 +417,7 @@ void update_ac_velocity_vv(float **vz_vv, float **vx_vv, float **p_vf, float **p
 / c11 c13
 /   .   c33
 /           c55
+/  VTI
 ***************************************************************/
 
 
@@ -433,7 +435,6 @@ void update_stress_vf(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx
 {
 
   int iz,ix;
-
 
   memset(t12[0],0,(nzpad+1)*(nxpad+2)*sizeof(float));
 
@@ -520,7 +521,7 @@ void update_stress_fv(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx
 
     memset(t21[0],0,(nzpad+2)*(nxpad+1)*sizeof(float));
 
-    // compute DV1DE2 and update components
+    //compute DV1DE2 and update components
 
     //Gradient
     G2_CC(t21,vz_ff,nzpad+2,nxpad+1);
@@ -593,6 +594,245 @@ void update_stress_fv(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx
       }
 
   }
+
+  /***************************************************************
+  / Elastic (Anisotropic) orthorombic footprint - 4 coefficients
+  / c11 c13   c15
+  /   .   c33 c35
+  /           c55
+  /  TTI
+  ***************************************************************/
+
+
+  /****************************************
+  / UPDATE STRESSES FOR [v,f] GRIDS - CART : TTI
+  *****************************************/
+
+
+  void update_stress_vf_tti(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx_vv,          \
+                            float **sxx_vf, float **sxz_vf, float **szz_vf, float **rho,            \
+                            float **c11,    float **c13,    float **c33,    float **c55,            \
+                            float **c15,    float **c35,    float **t12,    float dtx, float dtz,   \
+                            int nzpad,      int nxpad)
+  /* */
+  /* */
+  {
+
+    int iz,ix;
+
+    memset(t12[0],0,(nzpad+1)*(nxpad+2)*sizeof(float));
+
+    // compute DV1DE2 and update components
+    // divergence operator
+
+    D2_CC(t12,vz_vv,nzpad+1,nxpad+1);
+
+    for(ix=0; ix<nxpad+2; ix++){
+      for(iz=0; iz<nzpad+1; iz++){
+
+
+        //S11 component
+        // s_zz = c35*dvzdx
+        szz_vf[ix][iz]+= dtx*c35[ix][iz]*t12[ix][iz];
+
+        //S22 component
+        // s_xx = c15*dvzdx
+        sxx_vf[ix][iz]+= dtx*c15[ix][iz]*t12[ix][iz];
+
+        // S12 or S21 component
+        // s_zx = c55*dvzdx
+        sxz_vf[ix][iz]+= dtx*c55[ix][iz]*t12[ix][iz];
+
+        }
+      }
+
+    memset(t12[0],0,(nzpad+1)*(nxpad+2)*sizeof(float));
+
+    // compute DV2DE2 and update components
+
+    // Divergence
+    D2_CC(t12,vx_vv,nzpad+1,nxpad+1);
+
+    for(ix=0; ix<nxpad+2; ix++){
+      for(iz=0; iz<nzpad+1; iz++){
+
+        // S11 component
+        // s_zz=c13*dvxdx
+        szz_vf[ix][iz]+= dtx*c13[ix][iz]*t12[ix][iz];
+
+        // S22 component
+        // s_xx=c11*dvxdx
+        sxx_vf[ix][iz]+= dtx*c11[ix][iz]*t12[ix][iz];
+
+        //S12 or S21 components
+        // s_xz = c15*dvxdx
+        sxz_vf[ix][iz]+= dtx*c15[ix][iz]*t12[ix][iz];
+
+          }
+        }
+
+    memset(t12[0],0,(nzpad+1)*(nxpad+2)*sizeof(float));
+
+
+    // compute DV1DE1 and update components
+    G1_CC(t12,vz_ff,nzpad+1,nxpad+2);
+
+    for(ix=0; ix<nxpad+2; ix++){
+      for(iz=0; iz<nzpad+1; iz++){
+
+        // S11 component
+        // s_zz=c33*dvzdz
+        szz_vf[ix][iz]+= dtz*c33[ix][iz]*t12[ix][iz];
+
+        // S22 component
+        // s_xx=c13*dvzdz
+        sxx_vf[ix][iz]+= dtz*c13[ix][iz]*t12[ix][iz];
+
+        // S12 or S21 component
+        // s_xz=c35*dvzdz
+        sxz_vf[ix][iz]+= dtz*c35[ix][iz]*t12[ix][iz];
+      }
+    }
+
+    // compute DV2DE1 and update components
+
+    memset(t12[0],0,(nzpad+1)*(nxpad+2)*sizeof(float));
+
+    G1_CC(t12,vx_ff,nzpad+1,nxpad+2);
+
+    for(ix=0; ix<nxpad+2; ix++){
+      for(iz=0; iz<nzpad+1; iz++){
+
+        // S11 component
+        // s_zz = c35*dvxdz
+        szz_vf[ix][iz]+= dtz*c35[ix][iz]*t12[ix][iz];
+
+        // S22 component
+        // s_xx = c15*dvxdz
+        sxx_vf[ix][iz]+= dtz*c15[ix][iz]*t12[ix][iz];
+
+        // S12 or S21 component
+        // s_zx=c55*dvxdz (dv2de1 part)
+        sxz_vf[ix][iz]+= dtz*c55[ix][iz]*t12[ix][iz];
+
+        }
+      }
+
+    }
+
+
+    /****************************************
+    / UPDATE STRESSES FOR [f,v] GRIDS - CART : TTI
+    *****************************************/
+
+    void update_stress_fv_tti(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx_vv,          \
+                              float **sxx_fv, float **sxz_fv, float **szz_fv, float **rho,            \
+                              float **c11,    float **c13,    float **c33,    float **c55,            \
+                              float **c15,    float **c35,    float **t21,    float dtx,  float dtz,  \
+                              int nzpad,      int nxpad)
+    {
+        int iz,ix;
+
+        memset(t21[0],0,(nzpad+2)*(nxpad+1)*sizeof(float));
+
+        //compute DV1DE2 and update components
+
+        //Gradient
+        G2_CC(t21,vz_ff,nzpad+2,nxpad+1);
+
+        for(ix=0; ix<nxpad+1; ix++){
+          for(iz=0; iz<nzpad+2; iz++){
+
+            // S11 component
+            // s_zz = c35*dvzdx
+            szz_fv[ix][iz]+= dtx*c35[ix][iz]*t21[ix][iz];
+
+            // S22 component
+            // s_xx = c15*dvzdx
+            sxx_fv[ix][iz]+= dtx*c15[ix][iz]*t21[ix][iz];
+
+            // S12 or S21 component
+            // s_zx=c55*dvzdx (dv1de2 part)
+            sxz_fv[ix][iz]+= dtx*c55[ix][iz]*t21[ix][iz];
+
+            }
+          }
+
+
+        memset(t21[0],0,(nzpad+2)*(nxpad+1)*sizeof(float));
+
+        // compute DV2DE2 and update components
+
+        // Gradient
+        G2_CC(t21,vx_ff,nzpad+2,nxpad+1);
+
+        for(ix=0; ix<nxpad+1; ix++){
+          for(iz=0; iz<nzpad+2; iz++){
+
+            // S11 component
+            // s_zz=c13*dvxdx
+            szz_fv[ix][iz]+= dtx*c13[ix][iz]*t21[ix][iz];
+
+            // S22 component
+            // s_xx=c11*dvxdx
+            sxx_fv[ix][iz]+= dtx*c11[ix][iz]*t21[ix][iz];
+
+            // S12 or S21 component
+            // s_xz=c15*dvxdx
+            sxz_fv[ix][iz]+= dtx*c15[ix][iz]*t21[ix][iz];
+
+              }
+            }
+
+        memset(t21[0],0,(nzpad+2)*(nxpad+1)*sizeof(float));
+
+        // compute DV1DE1 and update components
+        D1_CC(t21,vz_vv,nzpad+1,nxpad+1);
+
+        for(ix=0; ix<nxpad+1; ix++){
+          for(iz=0; iz<nzpad+2; iz++){
+
+            // S11 component
+            // s_zz=c33*dvzdz
+            szz_fv[ix][iz]+= dtz*c33[ix][iz]*t21[ix][iz];
+
+            // S22 component
+            // s_xx=c13*dvzdz
+            sxx_fv[ix][iz]+= dtz*c13[ix][iz]*t21[ix][iz];
+
+            // S12 or S21 component
+            // sxz = c35*dvzdz
+            sxz_fv[ix][iz]+= dtz*c35[ix][iz]*t21[ix][iz];
+
+          }
+        }
+
+
+        memset(t21[0],0,(nzpad+2)*(nxpad+1)*sizeof(float));
+        // compute  DV2DE1 and update components
+
+        D1_CC(t21,vx_vv,nzpad+1,nxpad+1);
+
+        for(ix=0; ix<nxpad+1; ix++){
+          for(iz=0; iz<nzpad+2; iz++){
+
+            // S11 component
+            // s_zz = c35*dvxdz
+            szz_fv[ix][iz]+= dtz*c35[ix][iz]*t21[ix][iz];
+
+            // S22 component
+            // s_xx=c15*dvxdz
+            sxx_fv[ix][iz]+= dtz*c15[ix][iz]*t21[ix][iz];
+
+            // S12 or S21 component
+            // s_zx=c55*dvxdz (dv2de1 part)
+            sxz_fv[ix][iz]+= dtz*c55[ix][iz]*t21[ix][iz];
+
+            }
+          }
+
+      }
+
 
   /****************************************
   / UPDATE VELOCITY FOR [f,f] GRIDS - CART
@@ -730,12 +970,12 @@ void inject_ps_src_cart(float **p_fv,float **p_vf, float*** ww, lint2d cs, int i
   int is2 = cs->jx[0];
   int is1 = cs->jz[0];
   // [v,f] grid
-  p_vf[is1][is2]      =   p_vf[is1][is2]     + ww[it][0][0]/2.0;
-  p_vf[is1+1][is2]    =   p_vf[is1+1][is2]   + ww[it][0][0]/2.0;
+  p_vf[is1][is2]      =   p_vf[is1][is2]     + ww[it][0][0]/4.0;
+  p_vf[is1+1][is2]    =   p_vf[is1+1][is2]   + ww[it][0][0]/4.0;
 
   // [f,v] grids
-  p_fv[is1][is2+1]    =   p_fv[is1][is2+1]   + ww[it][0][0]/2.0;
-  p_fv[is1+1][is2+1]  =   p_fv[is1+1][is2+1] + ww[it][0][0]/2.0;
+  p_fv[is1][is2+1]    =   p_fv[is1][is2+1]   + ww[it][0][0]/4.0;
+  p_fv[is1+1][is2+1]  =   p_fv[is1+1][is2+1] + ww[it][0][0]/4.0;
 
 }
 
@@ -757,77 +997,236 @@ void inject_vel_src_cart(float **v_ff,float **v_vv, float*** ww, lint2d cs, int 
 
 /*----------------------------------------------------------------------------------------*/
 
-/****************************************
+/*****************************************
 / Coupling conditions
 *****************************************/
 
+/* Update Mimetic points using coupling conditions */
 
-void apply_vel_cpl_vv(float **vz1_vv, float **vz2_vv, int nz1, int nxpad)
+/* [v] grid coupling */
+void apply_vel_cpl_vv(float **vz1_vv, float **vz2_vv, int nz, int nx)
 /* Velocity continuous  */
-
 {
   int ix;
 
-  for(ix=0;ix<nxpad;ix++){
-    vz1_vv[ix][nz1]  = 0.5*(vz1_vv[ix][nz1]+vz2_vv[ix][0]);
-    vz2_vv[ix][0]    = vz1_vv[ix][nz1];
+  for(ix=0;ix<nx+1;ix++){
+    vz1_vv[ix][nz+1]  = 0.5*(vz1_vv[ix][nz+1]+vz2_vv[ix][0]);
+    vz2_vv[ix][0]     = vz1_vv[ix][nz+1];
   }
 }
 
-
-
-// void apply_vel_cpl_ff(float **vz1_ff, float **vz2_ff, float **vx1_ff, float **vx2_ff, float **t1_ff, float **ro1, float **vp1, float **c33, int nz1, int nxpad)
-// /* Compute mimetic velocity from derivatives */
-// {
-//   int ix;
-//   float k1;
-//
-//   const float G[24] = {-352.0/105.0, 35.0/8.0, -35.0/24.0, 21.0/40.0, -5.0/56.0,   \
-//                         16.0/105.0, -31.0/24.0, 29.0/24.0, -3.0/40.0, 1.0/168.0,   \
-//                         5.0/56.0,   -21.0/40.0, 35.0/24.0, -35.0/8.0, 352.0/105.0, \
-//                         -1.0/168.0,  3.0/40.0, -29.0/24.0, 31.0/24.0, -16.0/105.0, \
-//                         1.0/24.0,   -9.0/8.0,   9.0/8.0,  -1.0/24.0
-//                       };
-//   k1 = rho1*vp1*vp1;
-//   vzn2_ff[ 0,:]  = (k1*np.matmul(G[-1,:],vxn1_ff.T).T - c13*np.matmul(G[0,:],vxn2_ff.T).T + k1*np.matmul(G[-1,:-1],vzn1_ff[:-1,:]) - c33*np.matmul(G[0,1:],vzn2_ff[1:,:]) )/(c33*G[0,0]-k1*G[-1,-1]);
-//   vzn1_ff[-1,:]  = vzn2_ff[ 0,:]
-//
-//   for(ix=0; ix<nxpad; ix){
-//     k1=ro1[ix][nz1]*vp1[ix][nz1]*vp1[ix][nz1];
-//     t22[ix][nz1] = k1*(G[15]*vx1_ff[nx-5][iz]+ G[16]*vx1_ff[nx-4][ix]+ G[17]*vx1_ff[nx-3][ix]+ \
-//                        G[18]*vx1_ff[nx-2][iz]+ G[19]*vx1_ff[nx-1][ix]) -                       \
-//                    c13[ix][nz1]*();
-//
-//   }
-//
-// }
-
-
-void apply_stress_cpl_vf(float **p1_vf, float **szz_vf, float **sxz_vf, int nz1, int nxpad)
+void apply_stress_cpl_vf(float **p1_vf, float **szz_vf, float **sxz_vf, int nz, int nx)
 /* Stress continuous */
 {
   int ix;
 
-  for(ix=0;ix<nxpad;ix++){
-    p1_vf[ix][nz1]  = 0.5*(p1_vf[ix][nz1]-szz_vf[ix][0]);
-    szz_vf[ix][0]   = -p1_vf[ix][nz1];
-    sxz_vf[ix][0]   = 0.0;
+  for(ix=0;ix<nx+2;ix++){
+    p1_vf[ix][nz+1]  = 0.5*(p1_vf[ix][nz+1]-szz_vf[ix][0]);
+    szz_vf[ix][0]  = -p1_vf[ix][nz+1];
+    sxz_vf[ix][0]  = 0.0;
   }
 }
 
-// void apply_stress_cpl_fv(float **p2_fv, float **szz_fv, float **sxz_fv, int nz1, int nxpad)
-// /* Stress continuous */
-// {
-//   int ix;
-//
-//   for(ix=0; ix<nxpad; ix++){
-//
-//
-//
-//   }
-//
-// }
 
+/* [f] grid coupling : update mimetic points using derivatives*/
+
+
+void apply_vel_cpl_ff(float **vz1_ff, float **vz2_ff, float **vx1_ff, float **vx2_ff, \
+                      float **vz2_vv, float **vx2_vv, float **vx1_vv, \
+                      float **ro, float **vp, float **c13, float **c33, float idz, float idx, \
+                      int nzl, int nxl)
+
+/* Compute mimetic velocity from derivatives */
+{
+
+  int ix, nz, nx;
+  float k1,k2,k3,k4;
+
+  const float G[24] = {-352.0/105.0, 35.0/8.0, -35.0/24.0, 21.0/40.0, -5.0/56.0,   \
+                        16.0/105.0, -31.0/24.0, 29.0/24.0, -3.0/40.0, 1.0/168.0,   \
+                        -1.0/168.0,  3.0/40.0, -29.0/24.0, 31.0/24.0, -16.0/105.0, \
+                        5.0/56.0,   -21.0/40.0, 35.0/24.0, -35.0/8.0, 352.0/105.0, \
+                        1.0/24.0,   -9.0/8.0,   9.0/8.0,  -1.0/24.0 };
+
+  const float D[14]= {-11.0/12.0, 17.0/24.0, 3.0/8.0, -5.0/24.0, 1.0/24.0, \
+                      -1.0/24.0,  5.0/24.0,  -3.0/8.0, -17.0/24.0, 11.0/12.0, \
+                       1.0/24.0, -9.0/8.0,   9.0/8.0,  -1.0/24.0 };
+
+
+  /* Update vx_ff */
+  /* compute D2(vz2_vv) */
+  /* Loop unrolled */
+
+  nz = nzl+1;
+  nx = nxl+1;
+
+  vx2_ff[0][0]    = 0.0;                                                        //ix=0
+  vx2_ff[1][0]    = idx*(D[0]*vz2_vv[0][0]+ D[1]*vz2_vv[1][0]+ D[2]*vz2_vv[2][0]+ \
+                         D[3]*vz2_vv[3][0]+ D[4]*vz2_vv[4][0]);                       //ix=1
+  vx2_ff[nx-2][0] = idx*(D[5]*vz2_vv[nx-5][0] +D[6]*vz2_vv[nx-4][0]+ \
+                         D[7]*vz2_vv[nx-3][0]+ D[8]*vz2_vv[nx-2][0]+ D[9]*vz2_vv[nx-1][0]); //ix=nx-2
+  vx2_ff[nx-1][0] = 0.0;                                                              //ix=nx-1
+
+  for(ix=2; ix<nx-2; ix++){
+    vx2_ff[ix][0] = idx*(D[10]*vz2_vv[ix-2][0]+ D[11]*vz2_vv[ix-1][0]+ D[12]*vz2_vv[ix][0]+  \
+                         D[13]*vz2_vv[ix+1][0]);
+      }
+
+  /* compute G1(vxn2_ff) and update mimetic point vx2_ff */
+
+  nz = nzl+2;
+  nx = nxl+2;
+
+  for(ix=0; ix<nx; ix++){
+
+    vx2_ff[ix][0]-= idz*(G[1]*vx2_ff[ix][1]+ G[2]*vx2_ff[ix][2]+ G[3]*vx2_ff[ix][3]+ G[4]*vx2_ff[ix][4]);
+    // { D2(vz2_ff)-G1(vx2_ff) } /Gz[0]
+    vx2_ff[ix][0]/= idz*G[0];
+
+     }
+
+  /* Update vz_ff */
+
+  nz = nzl+1;
+  nx = nxl+1;
+
+  /* compute D2(vx1_vv) */
+  k1=ro[1][nz-1]*vp[1][nz-1]*vp[1][nz-1];
+  k2=ro[nx-2][nz-1]*vp[nx-2][nz-1]*vp[nx-2][nz-1];
+
+  vz2_ff[0][0]    = 0.0;
+  vz2_ff[1][0]    = idx*k1*(D[0]*vx1_vv[0][nz-1] +D[1]*vx1_vv[1][nz-1]+ D[2]*vx1_vv[2][nz-1]+ \
+                            D[3]*vx1_vv[3][nz-1]+ D[4]*vx1_vv[4][nz-1]);
+  vz2_ff[nx-2][0] = idx*k2*(D[5]*vx1_vv[nx-5][nz-1] +D[6]*vx1_vv[nx-4][nz-1]+ \
+                            D[7]*vx1_vv[nx-3][nz-1] +D[8]*vx1_vv[nx-2][nz-1]+ D[9]*vx1_vv[nx-1][nz-1]);
+  vz2_ff[nx-1][0] = 0.0;
+
+  for(ix=2; ix<nx-2; ix++){
+    k3 = ro[ix][nz-1]*vp[ix][nz-1]*vp[ix][nz-1];
+
+    vz2_ff[ix][0] = idx*k3*(D[10]*vx2_vv[ix-2][0]+ D[11]*vx2_vv[ix-1][0]+ D[12]*vx2_vv[ix][0]+  \
+                            D[13]*vx2_vv[ix+1][0]);
+      }
+
+  nz = nzl+1;
+  nx = nxl+1;
+
+  /* compute D2(vx2_vv) */
+  vz2_ff[0][0]    -= 0.0;
+  vz2_ff[1][0]    -= idx*c13[1][0]*(D[0]*vx2_vv[0][0]+ D[1]*vx2_vv[1][0]+ D[2]*vx2_vv[2][0]+ \
+                                    D[3]*vx2_vv[3][0]+ D[4]*vx2_vv[4][0]);
+
+  vz2_ff[nx-2][0] -= idx*c13[nx-2][0]*(D[5]*vx2_vv[nx-5][0] +D[6]*vx2_vv[nx-4][0]+ \
+                                       D[7]*vx2_vv[nx-3][0] +D[8]*vx2_vv[nx-2][0]+ D[9]*vx2_vv[nx-1][0]);
+
+  vz2_ff[nx-1][0] -= 0.0;
+
+  for(ix=2; ix<nx-2; ix++){
+    vz2_ff[ix][0]  -= idx*c13[ix][0]*(D[10]*vx2_vv[ix-2][0]+ D[11]*vx2_vv[ix-1][0]+ D[12]*vx2_vv[ix][0]+  \
+                                      D[13]*vx2_vv[ix+1][0]);
+      }
+
+  nz = nzl+2;
+  nx = nxl+2;
+
+  for(ix=0; ix<nx; ix++){
+
+    k1=ro[ix][nz-1]*vp[ix][nz-1]*vp[ix][nz-1];
+
+    /* compute G1(vz1_ff) */
+    vz2_ff[ix][0] += idz*k1*(G[15]*vz1_ff[ix][nz-5]+ G[16]*vz1_ff[ix][nz-4]+G[17]*vz1_ff[ix][nz-3]+ \
+                             G[18]*vz1_ff[ix][nz-2]); //G[19]*gg[ix][nz-1];
+
+    /* compute G1(vz2_ff)*/
+    vz2_ff[ix][0] -= idz*c33[ix][0]*(G[1]*vz2_ff[ix][1]+ G[2]*vz2_ff[ix][2]+ G[3]*vz2_ff[ix][3]+ G[4]*vz2_ff[ix][4]);
+
+    vz2_ff[ix][0] /= idz*(c33[ix][0]*G[0] - k1*G[19]);
+
+    /* Set vz1_ff = vz2_ff */
+    vz1_ff[ix][nz-1] = vz2_ff[ix][0];
+
+      }
+
+    }
+
+
+void apply_stress_cpl_fv(float **p_fv, float **szz_fv, float **sxz_fv, float **sxz_vf, \
+                         float **ro1, float **ro2, float idz, float idx, int nzl, int nxl)
+/* Stress continuous */
+{
+  int ix,nz,nx;
+
+  const float G[24] = {-352.0/105.0, 35.0/8.0, -35.0/24.0, 21.0/40.0, -5.0/56.0,   \
+                        16.0/105.0, -31.0/24.0, 29.0/24.0, -3.0/40.0, 1.0/168.0,   \
+                        -1.0/168.0,  3.0/40.0, -29.0/24.0, 31.0/24.0, -16.0/105.0, \
+                        5.0/56.0,   -21.0/40.0, 35.0/24.0, -35.0/8.0, 352.0/105.0, \
+                        1.0/24.0,   -9.0/8.0,   9.0/8.0,  -1.0/24.0 };
+
+  const float D[14]= {-11.0/12.0, 17.0/24.0, 3.0/8.0, -5.0/24.0, 1.0/24.0, \
+                      -1.0/24.0,  5.0/24.0,  -3.0/8.0, -17.0/24.0, 11.0/12.0, \
+                       1.0/24.0, -9.0/8.0,   9.0/8.0,  -1.0/24.0 };
+
+
+  nz = nzl+1;
+  nx = nxl+1;
+
+    //G2(sxz_vf)
+  szz_fv[0][0]    = -idx*ro1[0][nz-1]*(G[0]*sxz_vf[0][0]+ G[1]*sxz_vf[1][0]+ G[2]*sxz_vf[2][0]+ \
+                                   G[3]*sxz_vf[3][0]+ G[4]*sxz_vf[4][0]);
+  szz_fv[1][0]    = -idx*ro1[1][nz-1]*(G[5]*sxz_vf[0][0]+ G[6]*sxz_vf[1][0]+ G[7]*sxz_vf[2][0]+ \
+                                   G[8]*sxz_vf[3][0]+ G[9]*sxz_vf[4][0]);
+
+  szz_fv[nx-2][0] = -idx*ro1[nx-2][nz-1]*(G[10]*sxz_vf[nx-5][0]+ G[11]*sxz_vf[nx-4][0]+ G[12]*sxz_vf[nx-3][0]+ \
+                                          G[13]*sxz_vf[nx-2][0]+G[14]*sxz_vf[nx-1][0]);
+
+  szz_fv[nx-1][0] = -idx*ro1[nx-1][nz-1]*(G[15]*sxz_vf[nx-5][0]+ G[16]*sxz_vf[nx-4][0]+ G[17]*sxz_vf[nx-3][0]+ \
+                                      G[18]*sxz_vf[nx-2][0]+ G[19]*sxz_vf[nx-1][0]);
+  for(ix=2; ix<nx-2; ix++){
+    szz_fv[ix][0] = -idx*ro1[ix][nz-1]*(G[20]*sxz_vf[ix-1][0]+ G[21]*sxz_vf[ix][0]+ G[22]*sxz_vf[ix+1][0]+  \
+                                        G[23]*sxz_vf[ix+2][0]);
+  }
+
+
+  for(ix=0; ix<nx; ix++){
+
+    //G1(p_fv)
+    szz_fv[ix][0] -= idz*ro2[ix][0]*(G[15]*p_fv[ix][nz-5]+ G[16]*p_fv[ix][nz-4]+G[17]*p_fv[ix][nz-3]+ \
+                                     G[18]*p_fv[ix][nz-2]); //G[19]*p_fv[ix][nz-1];
+    //G1(szz_fv)
+    szz_fv[ix][0] -= idz*ro1[ix][nz-1]*(G[1]*szz_fv[ix][1]+ G[2]*szz_fv[ix][2]+ G[3]*szz_fv[ix][3]+ G[4]*szz_fv[ix][4]);
+
+    // divide by (rho1[0,0]*Gz[0,0]-rho2[-1,-1]*Gz1[-1,-1])
+
+    szz_fv[ix][0] /= idz*(ro1[ix][nz-1]*G[0] - ro2[ix][0]*G[19]);
+
+    p_fv[ix][nz-1] = -szz_fv[ix][0];
+
+    sxz_fv[ix][0] = 0.0;
+
+  }
+
+}
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+/*-----------------------------------------------------------------------------------------------*/
+
+/*****************************************
+/ Free surface mimetic point updates
+*****************************************/
+
+/* acoustic free surface */
+s
+
+
+
+
+/* elastic anisotropic free surface */
+
+
+
+/*-----------------------------------------------------------------------------------------------*/
 
 /* Wavefield manipulation */
 
@@ -843,30 +1242,19 @@ void extract_wfld_fsg(float** p, float** p_ff, float** p_vv, int nz, int nx)
       }
   }
 
-//
-// void extract_wfld2(float** p, float** p_vf, float** p_fv, int nz, int nx)
-// /* extract wavefield from [v,f] and [f,v]  grid*/
-// {
-//   int ix, iz;
-//
-//   for(ix=0; ix<nx-1; ix++){
-//     for(iz=0; iz<nz; iz++){
-//
-//     }
-//   }
-// }
-//
-// void combine_wfld(float** wfld1, float** wfld2)
-// {
-//
-// }
-//
-//
-// }
-//
-//
-//
-// }
+
+void combine_wfld(float **wout, float** win1, float** win2, int nz1, int nz2, int nx)
+ {
+   int ix,iz,nzf;
+   nzf = (nz1>nz2) ? nz1 : nz2;
+   for (ix=0; ix<nx; ix++){
+       for (iz=0; iz<nzf; iz++){
+           if(iz<nz1) wout[ix][iz]     = win1[ix][iz];
+           if(iz<nz2) wout[ix][iz+nz1] = win2[ix][iz];
+       }
+     }
+ }
+
 
 /* cut a rectangular wavefield subset considering the free surface */
 void cut2dfree(float** in, float** out, fdm2d fdm, sf_axis cz, sf_axis cx){
@@ -876,7 +1264,6 @@ void cut2dfree(float** in, float** out, fdm2d fdm, sf_axis cz, sf_axis cx){
     fz = (floor)((sf_o(cz)-fdm->ozpad)/fdm->dz);
     fx = (floor)((sf_o(cx)-fdm->oxpad)/fdm->dx);
     //sf_warning("fx: %i fz: %i",fx,fz);
-
     for (ix=0;ix<fdm->nx;ix++) {
 	    for (iz=0;iz<fdm->nz;iz++) {
     	    out[ix][iz] = in[fx+ix][fz+iz];

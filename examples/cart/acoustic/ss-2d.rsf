@@ -1,0 +1,10 @@
+2.1-git	sfspike	examples/cart/acoustic:	hsethi_a@GP-MOBILE13	Wed Oct  2 14:20:42 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/examples/cart/acoustic/ss-2d.rsf@"
+	unit1="s"
+	d1=0.004
+	n1=2

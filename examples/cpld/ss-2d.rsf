@@ -1,0 +1,10 @@
+2.1-git	sfspike	C/examples/cpld:	hsethi_a@GP-MOBILE13	Tue Oct  1 22:05:26 2019
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="/var/tmp/C/examples/cpld/ss-2d.rsf@"
+	unit1="s"
+	d1=0.004
+	n1=2
