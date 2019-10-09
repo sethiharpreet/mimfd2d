@@ -596,7 +596,7 @@ void update_stress_fv(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx
   }
 
   /***************************************************************
-  / Elastic (Anisotropic) orthorombic footprint - 4 coefficients
+  / Elastic (Anisotropic) orthorombic footprint - 6 coefficients
   / c11 c13   c15
   /   .   c33 c35
   /           c55
@@ -609,11 +609,9 @@ void update_stress_fv(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx
   *****************************************/
 
 
-  void update_stress_vf_tti(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx_vv,          \
-                            float **sxx_vf, float **sxz_vf, float **szz_vf, float **rho,            \
-                            float **c11,    float **c13,    float **c33,    float **c55,            \
-                            float **c15,    float **c35,    float **t12,    float dtx, float dtz,   \
-                            int nzpad,      int nxpad)
+  void update_stress_vf_tti(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx_vv, float **sxx_vf, float **sxz_vf, float **szz_vf, float **rho,   \
+                            float **c11,    float **c13,    float **c33,    float **c55,   float **c15,    float **c35,    float **t12,    float dtx, float dtz,   \
+                            int nzpad, int nxpad)
   /* */
   /* */
   {
@@ -1217,7 +1215,7 @@ void apply_stress_cpl_fv(float **p_fv, float **szz_fv, float **sxz_fv, float **s
 *****************************************/
 
 /* acoustic free surface */
-s
+
 
 
 
@@ -1237,7 +1235,13 @@ void extract_wfld_fsg(float** p, float** p_ff, float** p_vv, int nz, int nx)
 
     for (ix=0; ix<nx; ix++){
         for (iz=0; iz<nz; iz++){
-            p[ix][iz] = p_vv[ix][iz]*0.5 + (p_ff[ix][iz] + p_ff[ix][iz+1] + p_ff[ix+1][iz] + p_ff[ix+1][iz+1])*0.125;
+
+            // Wavefield cancellation
+            //p[ix][iz] = p_vv[ix][iz]*0.5 + (p_ff[ix][iz] + p_ff[ix][iz+1] + p_ff[ix+1][iz] + p_ff[ix+1][iz+1])*0.125;
+
+            // Original Weighting
+            p[ix][iz] = p_ff[ix+1][iz+1]*0.5 + (p_vv[ix][iz] + p_ff[ix+1][iz] + p_ff[ix+1][iz+1] + p_ff[ix][iz+1])*0.125;
+
         }
       }
   }
