@@ -12,7 +12,7 @@ int main(int argc, char* argv[]){
   bool ssou;   /* stress source */
   bool snap;   /* snapshot */
   bool fsrf;   /* free surface */
-  bool cpml;   /* C-PML boundary */
+  bool dabc;   /* absorbing boundary */
 
   int  jsnap,ntsnap,jdata; /* wavefield parameters*/
 
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
   sf_axis at,ax,az;
   sf_axis as,ar,ac;
 
-  int     nt,nz,nx,ns,nr,nc,npml;
+  int     nt,nz,nx,ns,nr,nc,nb;
   int     it,iz,ix;
   float   dt,dz,dx,idz,idx,dtx,dtz;
   int     nzpad,nxpad;
@@ -55,11 +55,6 @@ int main(int argc, char* argv[]){
 
   /* Temporary variables */
   float **t11a, **t12a, **t21a, **t22a;
-
-  /* C-PML variables */
-  float **conv_dpdx, **conv_dpzdz, **conv_dvx,  **conv_vz;
-  float *K_x, *K_x_half, *b_x, *b_x_half, *a_x, *a_x_half;
-  float *K_z, *K_z_half, *b_z, *b_z_half, *a_z, *a_z_half;
 
   /* Layer 1*/
   float **vx_ff, **vz_ff;
@@ -92,7 +87,7 @@ int main(int argc, char* argv[]){
   if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */
   if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag */
   if(! sf_getbool("ssou",&ssou)) ssou=false; /* stress source */
-  if(! sf_getbool("cpml",&cpml)) cpml=false; /* C-PML absorbing boundary */
+  if(! sf_getbool("dabc",&dabc)) dabc=false; /* absorbing boundary */
 
   /* I/O files */
   Fwav = sf_input ("in"); /* wavelet   */
@@ -148,9 +143,9 @@ int main(int argc, char* argv[]){
 
   /*------------------------------------------------------------*/
   /* expand domain for FD operators and ABC */
-  if( !sf_getint("npml",&npml) || npml<NOP) npml=NOP;
+  if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
 
-  fdm  = fdutil_init(verb,fsrf,az,ax,npml,1); /* Layer 1 --> Top */
+  fdm  = fdutil_init(verb,fsrf,az,ax,nb,1); /* Layer 1 --> Top */
 
   fdbell_init(nbell);
   /* Layer 1*/
@@ -263,15 +258,6 @@ int main(int argc, char* argv[]){
   wflz    = sf_floatalloc2(nzpad,nxpad); memset(wflz[0],0,nzpad*nxpad*sizeof(float));
   wflx    = sf_floatalloc2(nzpad,nxpad); memset(wflx[0],0,nzpad*nxpad*sizeof(float));
 
-
-  /* PML variables */
-  conv_px = sf_floatalloc2(nxpad+2,npml);  /* free surface */
-  conv_pz = sf_floatalloc2(2*npml,nzpad+2);
-
-
-  float **conv_px, **conv_pz, **conv_vx,  **conv_vz;
-  float *K_x, *K_x_half, *b_x, *b_x_half, *a_x, *a_x_half;
-  float *K_z, *K_z_half, *b_z, *b_z_half, *a_z, *a_z_half;
 
   /*------------------------------------------------------------*/
   /*
