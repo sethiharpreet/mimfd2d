@@ -32,8 +32,8 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
   thickness_PML_z = npml*dz;
 
   /* reflection coefficient (INRIA report section 6.1) */
-  Rcoef = 0.00000001;
-  //Rcoef = 0.001;
+  //Rcoef = 0.00000001;
+  Rcoef = 0.001;
 
 	/* local variables */
 	int i, h;
@@ -286,7 +286,12 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
 
 /* PML FSG update */
 
-/* Acoustic */
+/*-----------------------------------------------------------------------------/
+/
+/                             Acoustic
+/
+/-----------------------------------------------------------------------------*/
+
 void update_pressure_fv_PML(float **p_fv, float **vx_ff, float **vz_vv, float **t21, float **ro, float **vp, float dtx, float dtz, int nzpad, int nxpad,\
                             float **conv_vzvv_fv, float **conv_vxff_fv, float *K_x, float *b_x, float *a_x, float *K_z_half, float *b_z_half, float *a_z_half, \
                             int npml, bool fsrf, bool cpld)
@@ -549,16 +554,15 @@ void update_ac_velocity_vv_PML(float **vz_vv, float **vx_vv, float **p_vf, float
 / UPDATE STRESSES FOR [v,f] GRIDS - CART : TTI
 *****************************************/
 
-
 void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx_vv, float **sxx_vf, float **sxz_vf, float **szz_vf, float **rho,   \
                               float **c11,    float **c13,    float **c33,    float **c55,   float **c15,    float **c35,    float **t12,    float dtx, float dtz,   \
-                              int nzpad, int nxpad,  float **conv_vz_vv, float **conv_vx_vv, float **conv_vz_ff, float **conv_vx_ff, float *K_x, float *K_z, float *b_x, \
-                              float *b_z, float *a_x, float *a_z, float *K_x_half, float *K_z_half, float *b_x_half, float *b_z_half, float *a_x_half, float *a_z_half, int npml)
+                              int nzpad, int nxpad,  float **conv_vz_vv_vf, float **conv_vx_vv_vf, float **conv_vz_ff_vf, float **conv_vx_ff_vf, float *K_z, float *b_z, float *a_z, \
+                              float *K_x_half, float *b_x_half, float *a_x_half, int npml, bool fsrf)
 /* */
 /* */
 {
 
-  int iz,ix;
+  int iz,ix,ib;
 
   memset(t12[0],0,(nzpad+1)*(nxpad+2)*sizeof(float));
 
@@ -569,6 +573,19 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
 
   for(ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+1; iz++){
+
+      /* left boundary */
+      if(ix < npml){
+        conv_vz_vv_vf[ix][iz] = b_x_half[ix] * conv_vz_vv_vf[ix][iz]  + a_x_half[ix] * t12[ix][iz];
+        t12[ix][iz] = t12[ix][iz] / K_x_half[ix] + conv_vz_vv_vf[ix][iz];
+      }
+
+      /* right boundary */
+      if(ix > nxpad+2-npml){
+        ib = (ix - nxpad - 2 + 2*npml);
+        conv_vz_vv_vf[ib][iz] = b_x_half[ib] * conv_vz_vv_vf[ib][iz]  + a_x_half[ib] * t12[ix][iz];
+        t12[ix][iz] = t12[ix][iz] / K_x_half[ib] + conv_vz_vv_vf[ib][iz];
+      }
 
 
       //S11 component
@@ -596,6 +613,20 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
   for(ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+1; iz++){
 
+
+      /* left boundary */
+      if(ix < npml){
+        conv_vx_vv_vf[ix][iz] = b_x_half[ix] * conv_vx_vv_vf[ix][iz]  + a_x_half[ix] * t12[ix][iz];
+        t12[ix][iz] = t12[ix][iz] / K_x_half[ix] + conv_vx_vv_vf[ix][iz];
+      }
+
+      /* right boundary */
+      if(ix > nxpad+2-npml){
+        ib = (ix - nxpad - 2 + 2*npml);
+        conv_vx_vv_vf[ib][iz] = b_x_half[ib] * conv_vx_vv_vf[ib][iz]  + a_x_half[ib] * t12[ix][iz];
+        t12[ix][iz] = t12[ix][iz] / K_x_half[ib] + conv_vx_vv_vf[ib][iz];
+      }
+
       // S11 component
       // s_zz=c13*dvxdx
       szz_vf[ix][iz]+= dtx*c13[ix][iz]*t12[ix][iz];
@@ -620,6 +651,19 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
   for(ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+1; iz++){
 
+      /* top boundary */
+      if(!(fsrf) && (iz < npml)){
+        conv_vz_ff_vf[ix][iz] = b_z[iz] * conv_vz_ff_vf[ix][iz] + a_z[iz] * t12[ix][iz];
+        t12[ix][iz] = t12[ix][iz]/K_z[iz] + conv_vz_ff_vf[ix][iz];
+      }
+
+      /* bottom boundary */
+      if(iz > nzpad+1-npml){
+        ib = (iz - nzpad - 1 + 2*npml);
+        conv_vz_ff_vf[ix][ib] = b_z[ib] * conv_vz_ff_vf[ix][ib] + a_z[ib] * t12[ix][iz];
+        t12[ix][iz] = t12[ix][iz]/K_z[ib] + conv_vz_ff_vf[ix][ib];
+      }
+
       // S11 component
       // s_zz=c33*dvzdz
       szz_vf[ix][iz]+= dtz*c33[ix][iz]*t12[ix][iz];
@@ -643,6 +687,21 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
   for(ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+1; iz++){
 
+      /* top boundary */
+      if(!(fsrf) && (iz < npml)){
+        conv_vx_ff_vf[ix][iz] = b_z[iz] * conv_vx_ff_vf[ix][iz] + a_z[iz] * t12[ix][iz];
+        t12[ix][iz] = t12[ix][iz]/K_z[iz] + conv_vx_ff_vf[ix][iz];
+      }
+
+      /* bottom boundary */
+      if(iz > nzpad+1-npml){
+        ib = (iz - nzpad - 1 + 2*npml);
+        conv_vx_ff_vf[ix][ib] = b_z[ib] * conv_vx_ff_vf[ix][ib] + a_z[ib] * t12[ix][iz];
+        t12[ix][iz] = t12[ix][iz]/K_z[ib] + conv_vx_ff_vf[ix][ib];
+  
+      }
+
+
       // S11 component
       // s_zz = c35*dvxdz
       szz_vf[ix][iz]+= dtz*c35[ix][iz]*t12[ix][iz];
@@ -665,13 +724,12 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
   / UPDATE STRESSES FOR [f,v] GRIDS - CART : TTI
   *****************************************/
 
-  void update_stress_fv_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  float **vx_vv,          \
-                            float **sxx_fv, float **sxz_fv, float **szz_fv, float **rho,            \
-                            float **c11,    float **c13,    float **c33,    float **c55,            \
-                            float **c15,    float **c35,    float **t21,    float dtx,  float dtz,  \
-                            int nzpad,      int nxpad)
+  void update_stress_fv_tti_PML(float **vz_ff, float **vx_ff, float **vz_vv,  float **vx_vv, float **sxx_fv, float **sxz_fv, float **szz_fv, float **rho, \
+                                float **c11, float **c13, float **c33, float **c55, float **c15, float **c35, float **t21, float dtx, float dtz, int nzpad, int nxpad,\
+                                float **conv_vz_ff_fv, float **conv_vx_ff_fv, float **conv_vz_vv_fv, float **conv_vx_vv_fv, float *K_x, float *b_x, float *a_x, \
+                                float *K_z_half, float *b_z_half, float *a_z_half, int npml, bool fsrf )
   {
-      int iz,ix;
+      int iz,ix,ib;
 
       memset(t21[0],0,(nzpad+2)*(nxpad+1)*sizeof(float));
 
@@ -682,6 +740,20 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
 
       for(ix=0; ix<nxpad+1; ix++){
         for(iz=0; iz<nzpad+2; iz++){
+
+          /* left boundary */
+          if(ix < npml){
+            conv_vz_ff_fv[ix][iz] = b_x[ix] * conv_vz_ff_fv[ix][iz]  + a_x[ix] * t21[ix][iz];
+            t21[ix][iz] = t21[ix][iz] / K_x[ix] + conv_vz_ff_fv[ix][iz];
+          }
+
+          /* right boundary */
+          if(ix > nxpad+1-npml){
+            ib = (ix - nxpad - 1 + 2*npml);
+            conv_vz_ff_fv[ib][iz] = b_x[ib] * conv_vz_ff_fv[ib][iz]  + a_x[ib] * t21[ix][iz];
+            t21[ix][iz] = t21[ix][iz] / K_x[ib] + conv_vz_ff_fv[ib][iz];
+          }
+
 
           // S11 component
           // s_zz = c35*dvzdx
@@ -709,6 +781,20 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
       for(ix=0; ix<nxpad+1; ix++){
         for(iz=0; iz<nzpad+2; iz++){
 
+          /* left boundary */
+          if(ix < npml){
+            conv_vx_ff_fv[ix][iz] = b_x[ix] * conv_vx_ff_fv[ix][iz]  + a_x[ix] * t21[ix][iz];
+            t21[ix][iz] = t21[ix][iz] / K_x[ix] + conv_vx_ff_fv[ix][iz];
+          }
+
+          /* right boundary */
+          if(ix > nxpad+1-npml){
+            ib = (ix - nxpad - 1 + 2*npml);
+            conv_vx_ff_fv[ib][iz] = b_x[ib] * conv_vx_ff_fv[ib][iz]  + a_x[ib] * t21[ix][iz];
+            t21[ix][iz] = t21[ix][iz] / K_x[ib] + conv_vx_ff_fv[ib][iz];
+          }
+
+
           // S11 component
           // s_zz=c13*dvxdx
           szz_fv[ix][iz]+= dtx*c13[ix][iz]*t21[ix][iz];
@@ -731,6 +817,20 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
 
       for(ix=0; ix<nxpad+1; ix++){
         for(iz=0; iz<nzpad+2; iz++){
+
+          /* top boundary */
+          if(!(fsrf) && (iz < npml)){
+            conv_vz_vv_fv[ix][iz] = b_z_half[iz] * conv_vz_vv_fv[ix][iz] + a_z_half[iz] * t21[ix][iz];
+            t21[ix][iz] = t21[ix][iz]/K_z_half[iz] + conv_vz_vv_fv[ix][iz];
+          }
+
+          /* bottom boundary */
+          if(iz > nzpad+2-npml){
+            ib = (iz - nzpad - 2 + 2*npml);
+            conv_vz_vv_fv[ix][ib] = b_z_half[ib] * conv_vz_vv_fv[ix][ib] + a_z_half[ib] * t21[ix][iz];
+            t21[ix][iz] = t21[ix][iz]/K_z_half[ib] + conv_vz_vv_fv[ix][ib];
+          }
+
 
           // S11 component
           // s_zz=c33*dvzdz
@@ -756,6 +856,19 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
       for(ix=0; ix<nxpad+1; ix++){
         for(iz=0; iz<nzpad+2; iz++){
 
+          /* top boundary */
+          if(!(fsrf) && (iz < npml)){
+            conv_vx_vv_fv[ix][iz] = b_z_half[iz] * conv_vx_vv_fv[ix][iz] + a_z_half[iz] * t21[ix][iz];
+            t21[ix][iz] = t21[ix][iz]/K_z_half[iz] + conv_vx_vv_fv[ix][iz];
+          }
+
+          /* bottom boundary */
+          if(iz > nzpad+2-npml){
+            ib = (iz - nzpad - 2 + 2*npml);
+            conv_vx_vv_fv[ix][ib] = b_z_half[ib] * conv_vx_vv_fv[ix][ib] + a_z_half[ib] * t21[ix][iz];
+            t21[ix][iz] = t21[ix][iz]/K_z_half[ib] + conv_vx_vv_fv[ix][ib];
+          }
+
           // S11 component
           // s_zz = c35*dvxdz
           szz_fv[ix][iz]+= dtz*c35[ix][iz]*t21[ix][iz];
@@ -778,10 +891,11 @@ void update_stress_vf_tti_PML(float **vz_ff,  float **vx_ff,  float **vz_vv,  fl
 / UPDATE VELOCITY FOR [f,f] GRIDS - CART
 ***************************************/
 
-void update_velocity_ff_PML(float **vx_ff, float ** vz_ff, float **sxx_fv, float **sxz_fv, float **sxz_vf, \
-                      float **szz_vf,float **rho, float **t22, float dtx, float dtz, int nzpad, int nxpad)
+void update_velocity_ff_PML(float **vx_ff, float ** vz_ff, float **sxx_fv, float **sxz_fv, float **sxz_vf, float **szz_vf, float **rho, float **t22, \
+                            float dtx, float dtz, int nzpad, int nxpad, float **conv_sxx_fv_ff, float **conv_szz_vf_ff, float **conv_sxz_vf_ff, float **conv_sxz_fv_ff,\
+                            float *K_x_half, float *b_x_half, float *a_x_half, float *K_z_half, float *b_z_half, float *a_z_half, int npml, bool fsrf)
 {
-  int iz,ix;
+  int iz,ix,ib;
 
   memset(t22[0],0,(nzpad+2)*(nxpad+2)*sizeof(float));
 
@@ -791,7 +905,22 @@ void update_velocity_ff_PML(float **vx_ff, float ** vz_ff, float **sxx_fv, float
 
   for(ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+2; iz++){
+
+      /* left boundary */
+      if(ix < npml){
+        conv_sxx_fv_ff[ix][iz] = b_x_half[ix] * conv_sxx_fv_ff[ix][iz]  + a_x_half[ix] * t22[ix][iz];
+        t22[ix][iz] = t22[ix][iz] / K_x_half[ix] + conv_sxx_fv_ff[ix][iz];
+      }
+
+      /* right boundary */
+      if(ix > nxpad+2-npml){
+        ib = (ix - nxpad - 2 + 2*npml);
+        conv_sxx_fv_ff[ib][iz] = b_x_half[ib] * conv_sxx_fv_ff[ib][iz]  + a_x_half[ib] * t22[ix][iz];
+        t22[ix][iz] = t22[ix][iz] / K_x_half[ib] + conv_sxx_fv_ff[ib][iz];
+      }
+
       vx_ff[ix][iz]+= dtx*t22[ix][iz]/rho[ix][iz];
+
       }
     }
 
@@ -803,7 +932,22 @@ void update_velocity_ff_PML(float **vx_ff, float ** vz_ff, float **sxx_fv, float
 
   for(ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nxpad+2; iz++){
+
+      /* top boundary */
+      if(!(fsrf) && (iz < npml)){
+        conv_sxz_vf_ff[ix][iz] = b_z_half[iz] * conv_sxz_vf_ff[ix][iz] + a_z_half[iz] * t22[ix][iz];
+        t22[ix][iz] = t22[ix][iz]/K_z_half[iz] + conv_sxz_vf_ff[ix][iz];
+      }
+
+      /* bottom boundary */
+      if(iz > nzpad+2-npml){
+        ib = (iz - nzpad - 2 + 2*npml);
+        conv_sxz_vf_ff[ix][ib] = b_z_half[ib] * conv_sxz_vf_ff[ix][ib] + a_z_half[ib] * t22[ix][iz];
+        t22[ix][iz] = t22[ix][iz]/K_z_half[ib] + conv_sxz_vf_ff[ix][ib];
+      }
+
       vx_ff[ix][iz]+= dtz*t22[ix][iz]/rho[ix][iz];
+
       }
     }
 
@@ -815,6 +959,19 @@ void update_velocity_ff_PML(float **vx_ff, float ** vz_ff, float **sxx_fv, float
 
   for(ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+2; iz++){
+
+      /* top boundary */
+      if(!(fsrf) && (iz < npml)){
+        conv_szz_vf_ff[ix][iz] = b_z_half[iz] * conv_szz_vf_ff[ix][iz] + a_z_half[iz] * t22[ix][iz];
+        t22[ix][iz] = t22[ix][iz]/K_z_half[iz] + conv_szz_vf_ff[ix][iz];
+      }
+
+      /* bottom boundary */
+      if(iz > nzpad+2-npml){
+        ib = (iz - nzpad - 2 + 2*npml);
+        conv_szz_vf_ff[ix][ib] = b_z_half[ib] * conv_szz_vf_ff[ix][ib] + a_z_half[ib] * t22[ix][iz];
+        t22[ix][iz] = t22[ix][iz]/K_z_half[ib] + conv_szz_vf_ff[ix][ib];
+      }
 
       vz_ff[ix][iz]+= dtz*t22[ix][iz]/rho[ix][iz];
 
@@ -829,6 +986,20 @@ void update_velocity_ff_PML(float **vx_ff, float ** vz_ff, float **sxx_fv, float
 
   for(ix=0; ix<nxpad+2; ix++){
     for(iz=0; iz<nzpad+2; iz++){
+
+      /* left boundary */
+      if(ix < npml){
+        conv_sxz_fv_ff[ix][iz] = b_x_half[ix] * conv_sxz_fv_ff[ix][iz]  + a_x_half[ix] * t22[ix][iz];
+        t22[ix][iz] = t22[ix][iz] / K_x_half[ix] + conv_sxz_fv_ff[ix][iz];
+      }
+
+      /* right boundary */
+      if(ix > nxpad+2-npml){
+        ib = (ix - nxpad - 2 + 2*npml);
+        conv_sxz_fv_ff[ib][iz] = b_x_half[ib] * conv_sxz_fv_ff[ib][iz]  + a_x_half[ib] * t22[ix][iz];
+        t22[ix][iz] = t22[ix][iz] / K_x_half[ib] + conv_sxz_fv_ff[ib][iz];
+      }
+
       vz_ff[ix][iz]+= dtx*t22[ix][iz]/rho[ix][iz];
       }
     }
@@ -842,10 +1013,11 @@ void update_velocity_ff_PML(float **vx_ff, float ** vz_ff, float **sxx_fv, float
 ***************************************/
 
 
-void update_velocity_vv_PML(float **vx_vv, float **vz_vv, float **szz_fv, float **sxz_fv, float **sxz_vf,
-                            float **sxx_vf, float **rho, float **t11, float dtx, float dtz, int nzpad, int nxpad)
+void update_velocity_vv_PML(float **vx_vv, float **vz_vv, float **szz_fv, float **sxz_fv, float **sxz_vf, float **sxx_vf, float **rho, float **t11, \
+                            float dtx, float dtz, int nzpad, int nxpad, float **conv_szz_fv_vv, float **conv_sxz_vf_vv, float **conv_sxx_vf_vv, float **conv_sxz_fv_vv,\
+                            float *K_x, float *b_x, float *a_x, float *K_z, float *b_z, float *a_z, int npml, bool fsrf)
 {
-int iz,ix;
+int iz,ix,ib;
 
 
 memset(t11[0],0,(nzpad+1)*(nxpad+1)*sizeof(float));
@@ -857,6 +1029,20 @@ G1_CC(t11,szz_fv,nzpad+1,nxpad+1);
 
 for(ix=0; ix<nxpad+1; ix++){
   for(iz=0; iz<nzpad+1; iz++){
+
+    /* top boundary */
+    if(!(fsrf) && (iz < npml)){
+      conv_szz_fv_vv[ix][iz] = b_z[iz] * conv_szz_fv_vv[ix][iz] + a_z[iz] * t11[ix][iz];
+      t11[ix][iz] = t11[ix][iz]/K_z[iz] + conv_szz_fv_vv[ix][iz];
+    }
+
+    /* bottom boundary */
+    if(iz > nzpad+1-npml){
+      ib = (iz - nzpad - 1 + 2*npml);
+      conv_szz_fv_vv[ix][ib] = b_z[ib] * conv_szz_fv_vv[ix][ib] + a_z[ib] * t11[ix][iz];
+      t11[ix][iz] = t11[ix][iz]/K_z[ib] + conv_szz_fv_vv[ix][ib];
+    }
+
     vz_vv[ix][iz]+= dtz*t11[ix][iz]/rho[ix][iz];
     }
   }
@@ -869,6 +1055,20 @@ G2_CC(t11,sxz_vf,nzpad+1,nxpad+1);
 
 for(ix=0; ix<nxpad+1; ix++){
   for(iz=0; iz<nzpad+1; iz++){
+
+    /* left boundary */
+    if(ix < npml){
+      conv_sxz_vf_vv[ix][iz] = b_x[ix] * conv_sxz_vf_vv[ix][iz]  + a_x[ix] * t11[ix][iz];
+      t11[ix][iz] = t11[ix][iz] / K_x[ix] + conv_sxz_vf_vv[ix][iz];
+    }
+
+    /* right boundary */
+    if(ix > nxpad+1-npml){
+      ib = (ix - nxpad - 1 + 2*npml);
+      conv_sxz_vf_vv[ib][iz] = b_x[ib] * conv_sxz_vf_vv[ib][iz]  + a_x[ib] * t11[ix][iz];
+      t11[ix][iz] = t11[ix][iz] / K_x[ib] + conv_sxz_vf_vv[ib][iz];
+    }
+
     vz_vv[ix][iz]+= dtx*t11[ix][iz]/rho[ix][iz];
     }
   }
@@ -881,6 +1081,20 @@ G2_CC(t11,sxx_vf,nzpad+1,nxpad+1);
 
 for(ix=0; ix<nxpad+1; ix++){
   for(iz=0; iz<nzpad+1; iz++){
+
+        /* left boundary */
+        if(ix < npml){
+          conv_sxx_vf_vv[ix][iz] = b_x[ix] * conv_sxx_vf_vv[ix][iz]  + a_x[ix] * t11[ix][iz];
+          t11[ix][iz] = t11[ix][iz] / K_x[ix] + conv_sxx_vf_vv[ix][iz];
+        }
+
+        /* right boundary */
+        if(ix > nxpad+1-npml){
+          ib = (ix - nxpad - 1 + 2*npml);
+          conv_sxx_vf_vv[ib][iz] = b_x[ib] * conv_sxx_vf_vv[ib][iz]  + a_x[ib] * t11[ix][iz];
+          t11[ix][iz] = t11[ix][iz] / K_x[ib] + conv_sxx_vf_vv[ib][iz];
+        }
+
     vx_vv[ix][iz]+= dtx*t11[ix][iz]/rho[ix][iz];
     }
   }
@@ -893,7 +1107,22 @@ G1_CC(t11,sxz_fv,nzpad+1,nxpad+1);
 
 for(ix=0; ix<nxpad+1; ix++){
   for(iz=0; iz<nzpad+1; iz++){
+
+    /* top boundary */
+    if(!(fsrf) && (iz < npml)){
+      conv_sxz_fv_vv[ix][iz] = b_z[iz] * conv_sxz_fv_vv[ix][iz] + a_z[iz] * t11[ix][iz];
+      t11[ix][iz] = t11[ix][iz]/K_z[iz] + conv_sxz_fv_vv[ix][iz];
+    }
+
+    /* bottom boundary */
+    if(iz > nzpad+1-npml){
+      ib = (iz - nzpad - 1 + 2*npml);
+      conv_sxz_fv_vv[ix][ib] = b_z[ib] * conv_sxz_fv_vv[ix][ib] + a_z[ib] * t11[ix][iz];
+      t11[ix][iz] = t11[ix][iz]/K_z[ib] + conv_sxz_fv_vv[ix][ib];
+    }
+
     vx_vv[ix][iz]+= dtz*t11[ix][iz]/rho[ix][iz];
+
     }
   }
 
