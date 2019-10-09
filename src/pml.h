@@ -1,7 +1,11 @@
 /* compute PML coefficients */
 
-void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *K_x, float *K_x_half, float *d_x, float *d_x_half, float *alpha_prime_x, float *alpha_prime_x_half, \
-               float *a_z, float *a_z_half, float *b_z, float *b_z_half, float *K_z, float *K_z_half, float *d_z, float *d_z_half, float *alpha_prime_z, float *alpha_prime_z_half, \
+// void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *K_x, float *K_x_half, float *d_x, float *d_x_half, float *alpha_prime_x, float *alpha_prime_x_half, \
+//                float *a_z, float *a_z_half, float *b_z, float *b_z_half, float *K_z, float *K_z_half, float *d_z, float *d_z_half, float *alpha_prime_z, float *alpha_prime_z_half, \
+//                float quasi_cp_max, float fpml, float dx, float dz, float dt, int npml, int nx, int nz);
+
+void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *K_x, float *K_x_half, \
+               float *a_z, float *a_z_half, float *b_z, float *b_z_half, float *K_z, float *K_z_half, \
                float quasi_cp_max, float fpml, float dx, float dz, float dt, int npml, int nx, int nz);
 
 void update_pressure_fv_PML(float **p_fv, float **vx_ff, float **vz_vv, float **t21, float **ro, float **vp, float dtx, float dtz, int nzpad, int nxpad,\

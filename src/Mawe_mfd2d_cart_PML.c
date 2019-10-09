@@ -66,8 +66,8 @@ int main(int argc, char* argv[]){
   float **conv_pvf_ff, **conv_pfv_ff, **conv_pvf_vv, **conv_pfv_vv;
   float **conv_vxff_fv, **conv_vzvv_fv, **conv_vxvv_vf, **conv_vzff_vf;
 
-  float *K_x, *K_x_half, *b_x, *b_x_half, *a_x, *a_x_half, *d_x, *d_x_half, *alpha_prime_x, *alpha_prime_x_half;
-  float *K_z, *K_z_half, *b_z, *b_z_half, *a_z, *a_z_half, *d_z, *d_z_half, *alpha_prime_z, *alpha_prime_z_half;
+  float *K_x, *K_x_half, *b_x, *b_x_half, *a_x, *a_x_half;
+  float *K_z, *K_z_half, *b_z, *b_z_half, *a_z, *a_z_half;
 
   float **vx_ff, **vz_ff;
   float **vx_vv, **vz_vv;
@@ -289,10 +289,7 @@ int main(int argc, char* argv[]){
   b_z = sf_floatalloc(2*npml);
   a_x = sf_floatalloc(2*npml);
   a_z = sf_floatalloc(2*npml);
-  d_x = sf_floatalloc(2*npml);
-  d_z = sf_floatalloc(2*npml);
-  alpha_prime_x = sf_floatalloc(2*npml);
-  alpha_prime_z = sf_floatalloc(2*npml);
+
 
   K_x_half = sf_floatalloc(2*npml);
   K_z_half = sf_floatalloc(2*npml);
@@ -300,10 +297,7 @@ int main(int argc, char* argv[]){
   b_z_half = sf_floatalloc(2*npml);
   a_x_half = sf_floatalloc(2*npml);
   a_z_half = sf_floatalloc(2*npml);
-  d_x_half = sf_floatalloc(2*npml);
-  d_z_half = sf_floatalloc(2*npml);
-  alpha_prime_x_half = sf_floatalloc(2*npml);
-  alpha_prime_z_half = sf_floatalloc(2*npml);
+
 
   /* FSG variables */
 
@@ -321,8 +315,12 @@ int main(int argc, char* argv[]){
 
 
   /* PML coefficient initilaize */
-  pml_coeff(a_x, a_x_half, b_x, b_x_half, K_x, K_x_half, d_x, d_x_half, alpha_prime_x, alpha_prime_x_half, \
-            a_z, a_z_half, b_z, b_z_half, K_z, K_z_half, d_z, d_z_half, alpha_prime_z, alpha_prime_z_half, \
+  // pml_coeff(a_x, a_x_half, b_x, b_x_half, K_x, K_x_half, d_x, d_x_half, alpha_prime_x, alpha_prime_x_half, \
+  //           a_z, a_z_half, b_z, b_z_half, K_z, K_z_half, d_z, d_z_half, alpha_prime_z, alpha_prime_z_half, \
+  //           maxvel, fpml, dx, dz, dt, npml, nx, nz);
+
+  pml_coeff(a_x, a_x_half, b_x, b_x_half, K_x, K_x_half, \
+            a_z, a_z_half, b_z, b_z_half, K_z, K_z_half, \
             maxvel, fpml, dx, dz, dt, npml, nx, nz);
 
 

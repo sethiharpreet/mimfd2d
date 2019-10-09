@@ -10,8 +10,8 @@ at grazing incidence for the seismic wave equation : Komatitsch and Martin 2007 
 
 
 
-void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *K_x, float *K_x_half, float *d_x, float *d_x_half, float *alpha_prime_x, float *alpha_prime_x_half, \
-               float *a_z, float *a_z_half, float *b_z, float *b_z_half, float *K_z, float *K_z_half, float *d_z, float *d_z_half, float *alpha_prime_z, float *alpha_prime_z_half, \
+void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *K_x, float *K_x_half, \
+               float *a_z, float *a_z_half, float *b_z, float *b_z_half, float *K_z, float *K_z_half, \
                float quasi_cp_max, float fpml, float dx, float dz, float dt, int npml, int nx, int nz)
 {
 
@@ -22,6 +22,9 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
 
   float thickness_PML_x, thickness_PML_z, xoriginleft, xoriginright, zoriginbottom, zorigintop;
   float Rcoef , d0_x, d0_z, xval, zval, abscissa, abscissa_norm;
+
+  float d_x, d_z, alpha_prime_x, alpha_prime_z;
+  float d_x_half, d_z_half, alpha_prime_x_half, alpha_prime_z_half;
 
 
   /* thickness of the PML layer in meters */
@@ -71,11 +74,11 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
     if(abscissa >= 0.0){
 
       abscissa_norm = abscissa/thickness_PML_x;
-      d_x[i] = d0_x * pow(abscissa_norm,npower);
+      d_x = d0_x * pow(abscissa_norm,npower);
 
       /* this taken from Gedney page 8.2 */
       K_x[i] = 1.0 + (k_max_PML - 1.0) * pow(abscissa_norm,npower);
-      alpha_prime_x[i] = alpha_max_PML * (1.0 - abscissa_norm);
+      alpha_prime_x = alpha_max_PML * (1.0 - abscissa_norm);
 
       }
 
@@ -87,24 +90,24 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
     if(abscissa >= 0.0){
 
       abscissa_norm = abscissa/thickness_PML_x;
-      d_x_half[i] = d0_x * pow(abscissa_norm,npower);
+      d_x_half = d0_x * pow(abscissa_norm,npower);
 
       /* this taken from Gedney page 8.2 */
       K_x_half[i] = 1.0 + (k_max_PML - 1.0) * pow(abscissa_norm,npower);
-      alpha_prime_x_half[i] = alpha_max_PML * (1.0 - abscissa_norm);
+      alpha_prime_x_half = alpha_max_PML * (1.0 - abscissa_norm);
 
       }
 
      /* just in case, for -5 at the end */
-     if(alpha_prime_x[i] < 0.0){ alpha_prime_x[i] = 0.0;}
-     if(alpha_prime_x_half[i] < 0.0) { alpha_prime_x_half[i] = 0.0;}
+     if(alpha_prime_x < 0.0){ alpha_prime_x = 0.0;}
+     if(alpha_prime_x_half < 0.0) { alpha_prime_x_half = 0.0;}
 
-     b_x[i]      = exp(- (d_x[i] / K_x[i] + alpha_prime_x[i]) * dt);
-     b_x_half[i] = exp(- (d_x_half[i] / K_x_half[i] + alpha_prime_x_half[i]) * dt);
+     b_x[i]      = exp(- (d_x / K_x[i] + alpha_prime_x) * dt);
+     b_x_half[i] = exp(- (d_x_half / K_x_half[i] + alpha_prime_x_half) * dt);
 
      /* avoid division by zero outside the PML */
-     if(fabs(d_x[i]) > 1.0e-6){ a_x[i] = d_x[i] * (b_x[i] - 1.0) / (K_x[i] * (d_x[i] + K_x[i] * alpha_prime_x[i]));}
-     if(fabs(d_x_half[i]) > 1.0e-6){ a_x_half[i] = d_x_half[i] * (b_x_half[i] - 1.0) / (K_x_half[i] * (d_x_half[i] + K_x_half[i] * alpha_prime_x_half[i]));}
+     if(fabs(d_x) > 1.0e-6){ a_x[i] = d_x * (b_x[i] - 1.0) / (K_x[i] * (d_x + K_x[i] * alpha_prime_x));}
+     if(fabs(d_x_half) > 1.0e-6){ a_x_half[i] = d_x_half * (b_x_half[i] - 1.0) / (K_x_half[i] * (d_x_half + K_x_half[i] * alpha_prime_x_half));}
 
       }
       /* end of left boundary */
@@ -134,11 +137,11 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
     if(abscissa >= 0.0){
 
       abscissa_norm = abscissa / thickness_PML_x;
-      d_x[h] = d0_x * pow(abscissa_norm,npower);
+      d_x = d0_x * pow(abscissa_norm,npower);
 
       /* this taken from Gedney page 8.2 */
       K_x[h] = 1.0 + (k_max_PML - 1.0) * pow(abscissa_norm,npower);
-      alpha_prime_x[h] = alpha_max_PML * (1.0 - abscissa_norm);
+      alpha_prime_x = alpha_max_PML * (1.0 - abscissa_norm);
 
       }
 
@@ -148,24 +151,24 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
     if(abscissa >= 0.0){
 
       abscissa_norm = abscissa / thickness_PML_x;
-      d_x_half[h] = d0_x * pow(abscissa_norm ,npower);
+      d_x_half = d0_x * pow(abscissa_norm ,npower);
 
       /* this taken from Gedney page 8.2 */
       K_x_half[h] = 1.0 + (k_max_PML - 1.0) * pow(abscissa_norm,npower);
-      alpha_prime_x_half[h] = alpha_max_PML * (1.0 - abscissa_norm);
+      alpha_prime_x_half = alpha_max_PML * (1.0 - abscissa_norm);
 
       }
 
       /* just in case, for -5 at the end */
-      if(alpha_prime_x[h] < 0.0){ alpha_prime_x[h] = 0.0;}
-      if(alpha_prime_x_half[h] < 0.0) {alpha_prime_x_half[h] = 0.0;}
+      if(alpha_prime_x < 0.0){ alpha_prime_x = 0.0;}
+      if(alpha_prime_x_half < 0.0) {alpha_prime_x_half = 0.0;}
 
-      b_x[h]      = exp(- (d_x[h] / K_x[h] + alpha_prime_x[h]) * dt);
-      b_x_half[h] = exp(- (d_x_half[h] / K_x_half[h] + alpha_prime_x_half[h]) * dt);
+      b_x[h]      = exp(- (d_x / K_x[h] + alpha_prime_x) * dt);
+      b_x_half[h] = exp(- (d_x_half / K_x_half[h] + alpha_prime_x_half) * dt);
 
       /* avoid division by zero outside the PML */
-      if(fabs(d_x[h]) > 1.0e-6){ a_x[h] = d_x[h] * (b_x[h] - 1.0) / (K_x[h] * (d_x[h] + K_x[h] * alpha_prime_x[h]));}
-      if(fabs(d_x_half[h]) > 1.0e-6){ a_x_half[h] = d_x_half[h] * (b_x_half[h] - 1.0) / (K_x_half[h] * (d_x_half[h] + K_x_half[h] * alpha_prime_x_half[h]));}
+      if(fabs(d_x) > 1.0e-6){ a_x[h] = d_x * (b_x[h] - 1.0) / (K_x[h] * (d_x + K_x[h] * alpha_prime_x));}
+      if(fabs(d_x_half) > 1.0e-6){ a_x_half[h] = d_x_half * (b_x_half[h] - 1.0) / (K_x_half[h] * (d_x_half + K_x_half[h] * alpha_prime_x_half));}
 
        }
        /* end of right boundary */
@@ -197,11 +200,11 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
     if(abscissa >= 0.0){
 
       abscissa_norm = abscissa / thickness_PML_z;
-      d_z[i] = d0_z * pow(abscissa_norm,npower);
+      d_z = d0_z * pow(abscissa_norm,npower);
 
       /* this taken from Gedney page 8.2 */
       K_z[i] = 1.0 + (k_max_PML - 1.0) * pow(abscissa_norm,npower);
-      alpha_prime_z[i] = alpha_max_PML * (1.0 - abscissa_norm);
+      alpha_prime_z = alpha_max_PML * (1.0 - abscissa_norm);
 
       }
 
@@ -211,20 +214,20 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
     if(abscissa >= 0.0){
 
       abscissa_norm = abscissa / thickness_PML_z;
-      d_z_half[i] = d0_z * pow(abscissa_norm,npower);
+      d_z_half = d0_z * pow(abscissa_norm,npower);
 
       /* this taken from Gedney page 8.2 */
       K_z_half[i] = 1.0 + (k_max_PML - 1.0) * pow(abscissa_norm,npower);
-      alpha_prime_z_half[i] = alpha_max_PML * (1.0 - abscissa_norm);
+      alpha_prime_z_half = alpha_max_PML * (1.0 - abscissa_norm);
 
       }
 
-    b_z[i]      = exp(- (d_z[i] / K_z[i] + alpha_prime_z[i]) * dt);
-    b_z_half[i] = exp(- (d_z_half[i] / K_z_half[i] + alpha_prime_z_half[i]) * dt);
+    b_z[i]      = exp(- (d_z / K_z[i] + alpha_prime_z) * dt);
+    b_z_half[i] = exp(- (d_z_half / K_z_half[i] + alpha_prime_z_half) * dt);
 
     /* avoid division by zero outside the PML */
-    if(fabs(d_z[i]) > 1.0e-6){ a_z[i] = d_z[i] * (b_z[i] - 1.0) / (K_z[i] * (d_z[i] + K_z[i] * alpha_prime_z[i]));}
-    if(fabs(d_z_half[i]) > 1.0e-6){ a_z_half[i] = d_z_half[i] * (b_z_half[i] - 1.0) / (K_z_half[i] * (d_z_half[i] + K_z_half[i] * alpha_prime_z_half[i]));}
+    if(fabs(d_z) > 1.0e-6){ a_z[i] = d_z * (b_z[i] - 1.0) / (K_z[i] * (d_z + K_z[i] * alpha_prime_z));}
+    if(fabs(d_z_half) > 1.0e-6){ a_z_half[i] = d_z_half * (b_z_half[i] - 1.0) / (K_z_half[i] * (d_z_half + K_z_half[i] * alpha_prime_z_half));}
 
   } /* end of top boundary */
 
@@ -247,11 +250,11 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
     if(abscissa >= 0.0){
 
       abscissa_norm = abscissa / thickness_PML_z;
-      d_z[h] = d0_z * pow(abscissa_norm,npower);
+      d_z = d0_z * pow(abscissa_norm,npower);
 
       /* this taken from Gedney page 8.2 */
       K_z[h] = 1.0 + (k_max_PML - 1.0) * pow(abscissa_norm,npower);
-      alpha_prime_z[h] = alpha_max_PML * (1.0 - abscissa_norm);
+      alpha_prime_z = alpha_max_PML * (1.0 - abscissa_norm);
 
         }
 
@@ -261,21 +264,21 @@ void pml_coeff(float *a_x, float *a_x_half, float *b_x, float *b_x_half, float *
     if(abscissa >= 0.0){
 
         abscissa_norm = abscissa / thickness_PML_z;
-        d_z_half[h] = d0_z * pow(abscissa_norm,npower);
+        d_z_half = d0_z * pow(abscissa_norm,npower);
 
         /* this taken from Gedney page 8.2 */
         K_z_half[h] = 1.0 + (k_max_PML - 1.0) * pow(abscissa_norm,npower);
-        alpha_prime_z_half[h] = alpha_max_PML * (1.0 - abscissa_norm);
+        alpha_prime_z_half = alpha_max_PML * (1.0 - abscissa_norm);
 
           }
 
-     b_z[h] = exp(- (d_z[h] / K_z[h] + alpha_prime_z[h]) * dt);
-     b_z_half[h] = exp(- (d_z_half[h] / K_z_half[h] + alpha_prime_z_half[h]) * dt);
+     b_z[h] = exp(- (d_z / K_z[h] + alpha_prime_z) * dt);
+     b_z_half[h] = exp(- (d_z_half / K_z_half[h] + alpha_prime_z_half) * dt);
 
 
      /* avoid division by zero outside the PML */
-     if(fabs(d_z[h]) > 1.0e-6){ a_z[h] = d_z[h] * (b_z[h] - 1.0) / (K_z[h] * (d_z[h] + K_z[h] * alpha_prime_z[h]));}
-     if(fabs(d_z_half[h]) > 1.0e-6){ a_z_half[h] = d_z_half[h] * (b_z_half[h] - 1.0) / (K_z_half[h] * (d_z_half[h] + K_z_half[h] * alpha_prime_z_half[h]));}
+     if(fabs(d_z) > 1.0e-6){ a_z[h] = d_z * (b_z[h] - 1.0) / (K_z[h] * (d_z + K_z[h] * alpha_prime_z));}
+     if(fabs(d_z_half) > 1.0e-6){ a_z_half[h] = d_z_half * (b_z_half[h] - 1.0) / (K_z_half[h] * (d_z_half + K_z_half[h] * alpha_prime_z_half));}
 
    } /* end of bottom boundary */
 
