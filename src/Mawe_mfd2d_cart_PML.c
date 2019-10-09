@@ -299,7 +299,7 @@ int main(int argc, char* argv[]){
   a_z_half = sf_floatalloc(2*npml);
 
 
-  /* FSG variables */
+  /* FSG convolutional variables */
 
   /* Pressure */
   conv_pvf_ff = sf_floatalloc2(npml,nxpad+2);
@@ -319,8 +319,7 @@ int main(int argc, char* argv[]){
   //           a_z, a_z_half, b_z, b_z_half, K_z, K_z_half, d_z, d_z_half, alpha_prime_z, alpha_prime_z_half, \
   //           maxvel, fpml, dx, dz, dt, npml, nx, nz);
 
-  pml_coeff(a_x, a_x_half, b_x, b_x_half, K_x, K_x_half, \
-            a_z, a_z_half, b_z, b_z_half, K_z, K_z_half, \
+  pml_coeff(a_x, a_x_half, b_x, b_x_half, K_x, K_x_half, a_z, a_z_half, b_z, b_z_half, K_z, K_z_half, \
             maxvel, fpml, dx, dz, dt, npml, nx, nz);
 
 
@@ -384,5 +383,40 @@ int main(int argc, char* argv[]){
       if(it%jdata==0) sf_floatwrite(dd[0],nr*nc,Fdat);
 
   }
+
+  /* deallocate arrays */
+  free(**ww); free(*ww); free(ww);
+  free(ss);
+  free(rr);
+  free(*dd);  free(dd);
+
+  free(*vp); free(vp);
+  free(*ro);  free(ro);
+
+  free(*t11a); free(t11a);
+  free(*t12a); free(t12a);
+  free(*t21a); free(t21a);
+  free(*t22a); free(t22a);
+
+  /* PML */
+  free(*conv_pvf_ff); free(conv_pvf_ff);
+  free(*conv_pfv_ff); free(conv_pfv_ff);
+  free(*conv_pvf_vv); free(conv_pvf_vv);
+  free(*conv_pfv_vv); free(conv_pfv_vv);
+
+  free(K_x); free(K_x_half); free(K_z); free(K_z_half);
+  free(a_x); free(a_x_half); free(a_z); free(a_z_half);
+  free(b_x); free(b_x_half); free(b_z); free(b_z_half);
+
+  free(*vz_ff); free(vz_ff);
+  free(*vx_ff); free(vx_ff);
+  free(*vz_vv); free(vz_vv);
+  free(*vx_vv); free(vx_vv);
+
+  free(*p_vf); free(p_vf);
+  free(*p_fv); free(p_fv);
+
+  free(*wflx); free(wflx);
+  free(*wflz); free(wflz);
 
 }

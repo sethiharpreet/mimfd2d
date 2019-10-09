@@ -135,7 +135,6 @@ void D1_CC(float **d1, float **dd, int nz, int nx)
     dd : vv or ff variables
     nz : nzpad+1 for vv grid or nzpad+2 for ff grid
     nx : nxpad+1 for vv grid or nxpad+2 for ff grid
-    k  : order
 ****************************************/
 {
   int ix,iz;
@@ -168,8 +167,6 @@ void D2_CC(float **d2, float **dd, int nz, int nx)
     dd : vv or ff variables
     nz : nzpad+1 for vv grid or nzpad+2 for ff grid
     nx : nxpad+1 for vv grid or nxpad+2 for ff grid
-    s  : starting index
-    k  : order
 ****************************************/
 {
   int ix,iz;
@@ -202,7 +199,6 @@ void G1_CC(float **g1,float **gg, int nz, int nx)
     gg : vv or ff variables
     nz : nzpad+1 for vv grid or nzpad+2 for ff grid
     nx : nxpad+1 for vv grid or nxpad+2 for ff grid
-    k  : order
 ****************************************/
 {
 
@@ -248,7 +244,6 @@ void G2_CC(float **g2,float **gg, int nz, int nx)
     gg : vv or ff variables
     nz : nzpad+1 for vv grid or nzpad+2 for ff grid
     nx : nxpad+1 for vv grid or nxpad+2 for ff grid
-    k  : order
 ****************************************/
 {
   int iz,ix;
